@@ -295,7 +295,7 @@ export default {
                 if (this.pathClickedOnce) {
                   this.editConnection(conn);
                 } else {
-                  let timer = setTimeout(function () {
+                  let timer = setTimeout(() => {
                     this.pathClickedOnce = false;
                     clearTimeout(timer);
                   }, 300);
@@ -372,7 +372,7 @@ export default {
         y2,
         startPosition,
         endPosition,
-        10,
+        5,
         "transparent",
         false
       );
@@ -422,7 +422,7 @@ export default {
             this.connectingInfo.source = node;
             this.connectingInfo.sourcePosition = position;
           })
-          .on("mouseup", function () {
+          .on("mouseup", () => {
             d3.event.stopPropagation();
             if (this.connectingInfo.source) {
               if (this.connectingInfo.source.id !== node.id) {
@@ -448,17 +448,17 @@ export default {
               this.connectingInfo.sourcePosition = null;
             }
           })
-          .on("mouseover", function () {
+          .on("mouseover", () => {
             connector.classed("active", true);
           })
-          .on("mouseout", function () {
+          .on("mouseout", () => {
             connector.classed("active", false);
           });
         connectors.push(connector);
       }
-      g.on("mouseover", function () {
+      g.on("mouseover", () => {
         connectors.forEach((conn) => conn.classed("active", true));
-      }).on("mouseout", function () {
+      }).on("mouseout", () => {
         connectors.forEach((conn) => conn.classed("active", false));
       });
     },
