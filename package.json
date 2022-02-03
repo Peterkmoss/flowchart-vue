@@ -1,6 +1,6 @@
 {
   "name": "@peterkmoss/flowchart-vue",
-  "version": "0.20.2",
+  "version": "0.20.3",
   "license": "MIT",
   "main": "dist/FlowChart.umd.min.js",
   "repository": {
@@ -17,7 +17,7 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "build-lib": "vue-cli-service build --target lib --name FlowChart src/components/flowchart/index.js"
+    "build-lib": "vue-cli-service build --target lib --name FlowChart src/index.js"
   },
   "dependencies": {
     "d3": "^5.15.0",
