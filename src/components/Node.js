@@ -4,14 +4,6 @@ import { roundTo20 } from "../utils/math";
 const borderColor = (isSelected) => isSelected ? '#666666' : '#bbbbbb';
 
 class AbstractNode {
-  id;
-  width;
-  height;
-  x;
-  y;
-  text;
-  type;
-
   constructor(id, x, y) {
     this.id = id;
     this.x = x;

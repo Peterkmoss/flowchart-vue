@@ -1,12 +1,7 @@
 class AbstractConnection {
-  src;
-  destination;
-  id;
-  type;
-
-  constructor(id, src, destination) {
+  constructor(id, source, destination) {
     this.id = id;
-    this.src = src;
+    this.source = source;
     this.destination = destination;
     this.type = "pass";
   }
@@ -15,19 +10,19 @@ class AbstractConnection {
 }
 
 export class ArrowConnection extends AbstractConnection {
-  constructor(id, src, destination) {
-    super(id, src, destination);
+  constructor(id, source, destination) {
+    super(id, source, destination);
   }
 }
 
 export class PassConnection extends ArrowConnection {
-  constructor(id, src, destination) {
-    super(id, src, destination);
+  constructor(id, source, destination) {
+    super(id, source, destination);
   }
 }
 
 export class RejectConnection extends ArrowConnection {
-  constructor(id, src, destination) {
-    super(id, src, destination);
+  constructor(id, source, destination) {
+    super(id, source, destination);
   }
 }
