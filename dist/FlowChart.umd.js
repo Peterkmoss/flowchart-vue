@@ -504,6 +504,57 @@ module.exports = function (it, key) {
 
 /***/ }),
 
+/***/ "0a49":
+/***/ (function(module, exports, __webpack_require__) {
+
+// 0 -> Array#forEach
+// 1 -> Array#map
+// 2 -> Array#filter
+// 3 -> Array#some
+// 4 -> Array#every
+// 5 -> Array#find
+// 6 -> Array#findIndex
+var ctx = __webpack_require__("9b43");
+var IObject = __webpack_require__("626a");
+var toObject = __webpack_require__("4bf8");
+var toLength = __webpack_require__("9def");
+var asc = __webpack_require__("cd1c");
+module.exports = function (TYPE, $create) {
+  var IS_MAP = TYPE == 1;
+  var IS_FILTER = TYPE == 2;
+  var IS_SOME = TYPE == 3;
+  var IS_EVERY = TYPE == 4;
+  var IS_FIND_INDEX = TYPE == 6;
+  var NO_HOLES = TYPE == 5 || IS_FIND_INDEX;
+  var create = $create || asc;
+  return function ($this, callbackfn, that) {
+    var O = toObject($this);
+    var self = IObject(O);
+    var f = ctx(callbackfn, that, 3);
+    var length = toLength(self.length);
+    var index = 0;
+    var result = IS_MAP ? create($this, length) : IS_FILTER ? create($this, 0) : undefined;
+    var val, res;
+    for (;length > index; index++) if (NO_HOLES || index in self) {
+      val = self[index];
+      res = f(val, index, O);
+      if (TYPE) {
+        if (IS_MAP) result[index] = res;   // map
+        else if (res) switch (TYPE) {
+          case 3: return true;             // some
+          case 5: return val;              // find
+          case 6: return index;            // findIndex
+          case 2: result.push(val);        // filter
+        } else if (IS_EVERY) return false; // every
+      }
+    }
+    return IS_FIND_INDEX ? -1 : IS_SOME || IS_EVERY ? IS_EVERY : result;
+  };
+};
+
+
+/***/ }),
+
 /***/ "0bfb":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -656,97 +707,6 @@ module.exports = (
 
 /***/ }),
 
-/***/ "1991":
-/***/ (function(module, exports, __webpack_require__) {
-
-var ctx = __webpack_require__("9b43");
-var invoke = __webpack_require__("31f4");
-var html = __webpack_require__("fab2");
-var cel = __webpack_require__("230e");
-var global = __webpack_require__("7726");
-var process = global.process;
-var setTask = global.setImmediate;
-var clearTask = global.clearImmediate;
-var MessageChannel = global.MessageChannel;
-var Dispatch = global.Dispatch;
-var counter = 0;
-var queue = {};
-var ONREADYSTATECHANGE = 'onreadystatechange';
-var defer, channel, port;
-var run = function () {
-  var id = +this;
-  // eslint-disable-next-line no-prototype-builtins
-  if (queue.hasOwnProperty(id)) {
-    var fn = queue[id];
-    delete queue[id];
-    fn();
-  }
-};
-var listener = function (event) {
-  run.call(event.data);
-};
-// Node.js 0.9+ & IE10+ has setImmediate, otherwise:
-if (!setTask || !clearTask) {
-  setTask = function setImmediate(fn) {
-    var args = [];
-    var i = 1;
-    while (arguments.length > i) args.push(arguments[i++]);
-    queue[++counter] = function () {
-      // eslint-disable-next-line no-new-func
-      invoke(typeof fn == 'function' ? fn : Function(fn), args);
-    };
-    defer(counter);
-    return counter;
-  };
-  clearTask = function clearImmediate(id) {
-    delete queue[id];
-  };
-  // Node.js 0.8-
-  if (__webpack_require__("2d95")(process) == 'process') {
-    defer = function (id) {
-      process.nextTick(ctx(run, id, 1));
-    };
-  // Sphere (JS game engine) Dispatch API
-  } else if (Dispatch && Dispatch.now) {
-    defer = function (id) {
-      Dispatch.now(ctx(run, id, 1));
-    };
-  // Browsers with MessageChannel, includes WebWorkers
-  } else if (MessageChannel) {
-    channel = new MessageChannel();
-    port = channel.port2;
-    channel.port1.onmessage = listener;
-    defer = ctx(port.postMessage, port, 1);
-  // Browsers with postMessage, skip WebWorkers
-  // IE8 has postMessage, but it's sync & typeof its postMessage is 'object'
-  } else if (global.addEventListener && typeof postMessage == 'function' && !global.importScripts) {
-    defer = function (id) {
-      global.postMessage(id + '', '*');
-    };
-    global.addEventListener('message', listener, false);
-  // IE8-
-  } else if (ONREADYSTATECHANGE in cel('script')) {
-    defer = function (id) {
-      html.appendChild(cel('script'))[ONREADYSTATECHANGE] = function () {
-        html.removeChild(this);
-        run.call(id);
-      };
-    };
-  // Rest old browsers
-  } else {
-    defer = function (id) {
-      setTimeout(ctx(run, id, 1), 0);
-    };
-  }
-}
-module.exports = {
-  set: setTask,
-  clear: clearTask
-};
-
-
-/***/ }),
-
 /***/ "1aaf":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -755,7 +715,7 @@ exports = module.exports = __webpack_require__("2350")(false);
 
 
 // module
-exports.push([module.i, "#svg{background-size:20px 20px,20px 20px,10px 10px,10px 10px;background-image:linear-gradient(90deg,#dfdfdf 1px,transparent 0),linear-gradient(180deg,#dfdfdf 1px,transparent 0),linear-gradient(90deg,#f1f1f1 1px,transparent 0),linear-gradient(180deg,#f1f1f1 1px,transparent 0);background-position:left -1px top -1px,left -1px top -1px,left -1px top -1px,left -1px top -1px;height:100%;width:100%}#chart{position:relative;width:800px;height:600px;border:1px solid #dfdfdf}#position{position:absolute;right:4px}.unselectable{moz-user-select:-moz-none;-moz-user-select:none;-o-user-select:none;-khtml-user-select:none;-webkit-user-select:none;-ms-user-select:none;user-select:none}.connector{cursor:crosshair;opacity:0}.connector.active{opacity:1;fill:#fff;stroke:#bbb;stroke-width:1px}.connector:hover{stroke:red}#svg .selection{stroke:#add8e6;fill:#add8e6;fill-opacity:.8;display:none}#svg .selection.active{display:block}", ""]);
+exports.push([module.i, "#svg{height:100%;width:100%}#chart{position:relative;width:800px;height:600px;border:1px solid #dfdfdf}#position{position:absolute;right:4px}.unselectable{moz-user-select:-moz-none;-moz-user-select:none;-o-user-select:none;-khtml-user-select:none;-webkit-user-select:none;-ms-user-select:none;user-select:none}.connector{cursor:crosshair;opacity:0}.connector.active{opacity:1;fill:#fff;stroke:#bbb;stroke-width:1px}.connector:hover{stroke:red}#svg .selection{stroke:#add8e6;fill:#add8e6;fill-opacity:.8;display:none}#svg .selection.active{display:block}", ""]);
 
 // exports
 
@@ -801,25 +761,6 @@ var document = __webpack_require__("e53d").document;
 var is = isObject(document) && isObject(document.createElement);
 module.exports = function (it) {
   return is ? document.createElement(it) : {};
-};
-
-
-/***/ }),
-
-/***/ "1fa8":
-/***/ (function(module, exports, __webpack_require__) {
-
-// call something on iterator step with safe closing on error
-var anObject = __webpack_require__("cb7c");
-module.exports = function (iterator, fn, value, entries) {
-  try {
-    return entries ? fn(anObject(value)[0], value[1]) : fn(value);
-  // 7.4.6 IteratorClose(iterator, completion)
-  } catch (e) {
-    var ret = iterator['return'];
-    if (ret !== undefined) anObject(ret.call(iterator));
-    throw e;
-  }
 };
 
 
@@ -1398,21 +1339,6 @@ exports.f = Object.getOwnPropertySymbols;
 
 /***/ }),
 
-/***/ "27ee":
-/***/ (function(module, exports, __webpack_require__) {
-
-var classof = __webpack_require__("23c6");
-var ITERATOR = __webpack_require__("2b4c")('iterator');
-var Iterators = __webpack_require__("84f2");
-module.exports = __webpack_require__("8378").getIteratorMethod = function (it) {
-  if (it != undefined) return it[ITERATOR]
-    || it['@@iterator']
-    || Iterators[classof(it)];
-};
-
-
-/***/ }),
-
 /***/ "294c":
 /***/ (function(module, exports) {
 
@@ -1651,29 +1577,6 @@ module.exports = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCE
 
 /***/ }),
 
-/***/ "31f4":
-/***/ (function(module, exports) {
-
-// fast apply, http://jsperf.lnkit.com/fast-apply/5
-module.exports = function (fn, args, that) {
-  var un = that === undefined;
-  switch (args.length) {
-    case 0: return un ? fn()
-                      : fn.call(that);
-    case 1: return un ? fn(args[0])
-                      : fn.call(that, args[0]);
-    case 2: return un ? fn(args[0], args[1])
-                      : fn.call(that, args[0], args[1]);
-    case 3: return un ? fn(args[0], args[1], args[2])
-                      : fn.call(that, args[0], args[1], args[2]);
-    case 4: return un ? fn(args[0], args[1], args[2], args[3])
-                      : fn.call(that, args[0], args[1], args[2], args[3]);
-  } return fn.apply(that, args);
-};
-
-
-/***/ }),
-
 /***/ "32e9":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1706,21 +1609,6 @@ var cof = __webpack_require__("6b4c");
 // eslint-disable-next-line no-prototype-builtins
 module.exports = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
   return cof(it) == 'String' ? it.split('') : Object(it);
-};
-
-
-/***/ }),
-
-/***/ "33a4":
-/***/ (function(module, exports, __webpack_require__) {
-
-// check on default Array iterator
-var Iterators = __webpack_require__("84f2");
-var ITERATOR = __webpack_require__("2b4c")('iterator');
-var ArrayProto = Array.prototype;
-
-module.exports = function (it) {
-  return it !== undefined && (Iterators.Array === it || ArrayProto[ITERATOR] === it);
 };
 
 
@@ -2384,38 +2272,6 @@ function applyToTag (styleElement, obj) {
 
 /***/ }),
 
-/***/ "4a59":
-/***/ (function(module, exports, __webpack_require__) {
-
-var ctx = __webpack_require__("9b43");
-var call = __webpack_require__("1fa8");
-var isArrayIter = __webpack_require__("33a4");
-var anObject = __webpack_require__("cb7c");
-var toLength = __webpack_require__("9def");
-var getIterFn = __webpack_require__("27ee");
-var BREAK = {};
-var RETURN = {};
-var exports = module.exports = function (iterable, entries, fn, that, ITERATOR) {
-  var iterFn = ITERATOR ? function () { return iterable; } : getIterFn(iterable);
-  var f = ctx(fn, that, entries ? 2 : 1);
-  var index = 0;
-  var length, step, iterator, result;
-  if (typeof iterFn != 'function') throw TypeError(iterable + ' is not iterable!');
-  // fast case for arrays with default iterator
-  if (isArrayIter(iterFn)) for (length = toLength(iterable.length); length > index; index++) {
-    result = entries ? f(anObject(step = iterable[index])[0], step[1]) : f(iterable[index]);
-    if (result === BREAK || result === RETURN) return result;
-  } else for (iterator = iterFn.call(iterable); !(step = iterator.next()).done;) {
-    result = call(iterator, f, step.value, entries);
-    if (result === BREAK || result === RETURN) return result;
-  }
-};
-exports.BREAK = BREAK;
-exports.RETURN = RETURN;
-
-
-/***/ }),
-
 /***/ "4bf8":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2671,300 +2527,6 @@ module.exports = __webpack_require__("95d5");
 
 /***/ }),
 
-/***/ "551c":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var LIBRARY = __webpack_require__("2d00");
-var global = __webpack_require__("7726");
-var ctx = __webpack_require__("9b43");
-var classof = __webpack_require__("23c6");
-var $export = __webpack_require__("5ca1");
-var isObject = __webpack_require__("d3f4");
-var aFunction = __webpack_require__("d8e8");
-var anInstance = __webpack_require__("f605");
-var forOf = __webpack_require__("4a59");
-var speciesConstructor = __webpack_require__("ebd6");
-var task = __webpack_require__("1991").set;
-var microtask = __webpack_require__("8079")();
-var newPromiseCapabilityModule = __webpack_require__("a5b8");
-var perform = __webpack_require__("9c80");
-var userAgent = __webpack_require__("a25f");
-var promiseResolve = __webpack_require__("bcaa");
-var PROMISE = 'Promise';
-var TypeError = global.TypeError;
-var process = global.process;
-var versions = process && process.versions;
-var v8 = versions && versions.v8 || '';
-var $Promise = global[PROMISE];
-var isNode = classof(process) == 'process';
-var empty = function () { /* empty */ };
-var Internal, newGenericPromiseCapability, OwnPromiseCapability, Wrapper;
-var newPromiseCapability = newGenericPromiseCapability = newPromiseCapabilityModule.f;
-
-var USE_NATIVE = !!function () {
-  try {
-    // correct subclassing with @@species support
-    var promise = $Promise.resolve(1);
-    var FakePromise = (promise.constructor = {})[__webpack_require__("2b4c")('species')] = function (exec) {
-      exec(empty, empty);
-    };
-    // unhandled rejections tracking support, NodeJS Promise without it fails @@species test
-    return (isNode || typeof PromiseRejectionEvent == 'function')
-      && promise.then(empty) instanceof FakePromise
-      // v8 6.6 (Node 10 and Chrome 66) have a bug with resolving custom thenables
-      // https://bugs.chromium.org/p/chromium/issues/detail?id=830565
-      // we can't detect it synchronously, so just check versions
-      && v8.indexOf('6.6') !== 0
-      && userAgent.indexOf('Chrome/66') === -1;
-  } catch (e) { /* empty */ }
-}();
-
-// helpers
-var isThenable = function (it) {
-  var then;
-  return isObject(it) && typeof (then = it.then) == 'function' ? then : false;
-};
-var notify = function (promise, isReject) {
-  if (promise._n) return;
-  promise._n = true;
-  var chain = promise._c;
-  microtask(function () {
-    var value = promise._v;
-    var ok = promise._s == 1;
-    var i = 0;
-    var run = function (reaction) {
-      var handler = ok ? reaction.ok : reaction.fail;
-      var resolve = reaction.resolve;
-      var reject = reaction.reject;
-      var domain = reaction.domain;
-      var result, then, exited;
-      try {
-        if (handler) {
-          if (!ok) {
-            if (promise._h == 2) onHandleUnhandled(promise);
-            promise._h = 1;
-          }
-          if (handler === true) result = value;
-          else {
-            if (domain) domain.enter();
-            result = handler(value); // may throw
-            if (domain) {
-              domain.exit();
-              exited = true;
-            }
-          }
-          if (result === reaction.promise) {
-            reject(TypeError('Promise-chain cycle'));
-          } else if (then = isThenable(result)) {
-            then.call(result, resolve, reject);
-          } else resolve(result);
-        } else reject(value);
-      } catch (e) {
-        if (domain && !exited) domain.exit();
-        reject(e);
-      }
-    };
-    while (chain.length > i) run(chain[i++]); // variable length - can't use forEach
-    promise._c = [];
-    promise._n = false;
-    if (isReject && !promise._h) onUnhandled(promise);
-  });
-};
-var onUnhandled = function (promise) {
-  task.call(global, function () {
-    var value = promise._v;
-    var unhandled = isUnhandled(promise);
-    var result, handler, console;
-    if (unhandled) {
-      result = perform(function () {
-        if (isNode) {
-          process.emit('unhandledRejection', value, promise);
-        } else if (handler = global.onunhandledrejection) {
-          handler({ promise: promise, reason: value });
-        } else if ((console = global.console) && console.error) {
-          console.error('Unhandled promise rejection', value);
-        }
-      });
-      // Browsers should not trigger `rejectionHandled` event if it was handled here, NodeJS - should
-      promise._h = isNode || isUnhandled(promise) ? 2 : 1;
-    } promise._a = undefined;
-    if (unhandled && result.e) throw result.v;
-  });
-};
-var isUnhandled = function (promise) {
-  return promise._h !== 1 && (promise._a || promise._c).length === 0;
-};
-var onHandleUnhandled = function (promise) {
-  task.call(global, function () {
-    var handler;
-    if (isNode) {
-      process.emit('rejectionHandled', promise);
-    } else if (handler = global.onrejectionhandled) {
-      handler({ promise: promise, reason: promise._v });
-    }
-  });
-};
-var $reject = function (value) {
-  var promise = this;
-  if (promise._d) return;
-  promise._d = true;
-  promise = promise._w || promise; // unwrap
-  promise._v = value;
-  promise._s = 2;
-  if (!promise._a) promise._a = promise._c.slice();
-  notify(promise, true);
-};
-var $resolve = function (value) {
-  var promise = this;
-  var then;
-  if (promise._d) return;
-  promise._d = true;
-  promise = promise._w || promise; // unwrap
-  try {
-    if (promise === value) throw TypeError("Promise can't be resolved itself");
-    if (then = isThenable(value)) {
-      microtask(function () {
-        var wrapper = { _w: promise, _d: false }; // wrap
-        try {
-          then.call(value, ctx($resolve, wrapper, 1), ctx($reject, wrapper, 1));
-        } catch (e) {
-          $reject.call(wrapper, e);
-        }
-      });
-    } else {
-      promise._v = value;
-      promise._s = 1;
-      notify(promise, false);
-    }
-  } catch (e) {
-    $reject.call({ _w: promise, _d: false }, e); // wrap
-  }
-};
-
-// constructor polyfill
-if (!USE_NATIVE) {
-  // 25.4.3.1 Promise(executor)
-  $Promise = function Promise(executor) {
-    anInstance(this, $Promise, PROMISE, '_h');
-    aFunction(executor);
-    Internal.call(this);
-    try {
-      executor(ctx($resolve, this, 1), ctx($reject, this, 1));
-    } catch (err) {
-      $reject.call(this, err);
-    }
-  };
-  // eslint-disable-next-line no-unused-vars
-  Internal = function Promise(executor) {
-    this._c = [];             // <- awaiting reactions
-    this._a = undefined;      // <- checked in isUnhandled reactions
-    this._s = 0;              // <- state
-    this._d = false;          // <- done
-    this._v = undefined;      // <- value
-    this._h = 0;              // <- rejection state, 0 - default, 1 - handled, 2 - unhandled
-    this._n = false;          // <- notify
-  };
-  Internal.prototype = __webpack_require__("dcbc")($Promise.prototype, {
-    // 25.4.5.3 Promise.prototype.then(onFulfilled, onRejected)
-    then: function then(onFulfilled, onRejected) {
-      var reaction = newPromiseCapability(speciesConstructor(this, $Promise));
-      reaction.ok = typeof onFulfilled == 'function' ? onFulfilled : true;
-      reaction.fail = typeof onRejected == 'function' && onRejected;
-      reaction.domain = isNode ? process.domain : undefined;
-      this._c.push(reaction);
-      if (this._a) this._a.push(reaction);
-      if (this._s) notify(this, false);
-      return reaction.promise;
-    },
-    // 25.4.5.1 Promise.prototype.catch(onRejected)
-    'catch': function (onRejected) {
-      return this.then(undefined, onRejected);
-    }
-  });
-  OwnPromiseCapability = function () {
-    var promise = new Internal();
-    this.promise = promise;
-    this.resolve = ctx($resolve, promise, 1);
-    this.reject = ctx($reject, promise, 1);
-  };
-  newPromiseCapabilityModule.f = newPromiseCapability = function (C) {
-    return C === $Promise || C === Wrapper
-      ? new OwnPromiseCapability(C)
-      : newGenericPromiseCapability(C);
-  };
-}
-
-$export($export.G + $export.W + $export.F * !USE_NATIVE, { Promise: $Promise });
-__webpack_require__("7f20")($Promise, PROMISE);
-__webpack_require__("7a56")(PROMISE);
-Wrapper = __webpack_require__("8378")[PROMISE];
-
-// statics
-$export($export.S + $export.F * !USE_NATIVE, PROMISE, {
-  // 25.4.4.5 Promise.reject(r)
-  reject: function reject(r) {
-    var capability = newPromiseCapability(this);
-    var $$reject = capability.reject;
-    $$reject(r);
-    return capability.promise;
-  }
-});
-$export($export.S + $export.F * (LIBRARY || !USE_NATIVE), PROMISE, {
-  // 25.4.4.6 Promise.resolve(x)
-  resolve: function resolve(x) {
-    return promiseResolve(LIBRARY && this === Wrapper ? $Promise : this, x);
-  }
-});
-$export($export.S + $export.F * !(USE_NATIVE && __webpack_require__("5cc5")(function (iter) {
-  $Promise.all(iter)['catch'](empty);
-})), PROMISE, {
-  // 25.4.4.1 Promise.all(iterable)
-  all: function all(iterable) {
-    var C = this;
-    var capability = newPromiseCapability(C);
-    var resolve = capability.resolve;
-    var reject = capability.reject;
-    var result = perform(function () {
-      var values = [];
-      var index = 0;
-      var remaining = 1;
-      forOf(iterable, false, function (promise) {
-        var $index = index++;
-        var alreadyCalled = false;
-        values.push(undefined);
-        remaining++;
-        C.resolve(promise).then(function (value) {
-          if (alreadyCalled) return;
-          alreadyCalled = true;
-          values[$index] = value;
-          --remaining || resolve(values);
-        }, reject);
-      });
-      --remaining || resolve(values);
-    });
-    if (result.e) reject(result.v);
-    return capability.promise;
-  },
-  // 25.4.4.4 Promise.race(iterable)
-  race: function race(iterable) {
-    var C = this;
-    var capability = newPromiseCapability(C);
-    var reject = capability.reject;
-    var result = perform(function () {
-      forOf(iterable, false, function (promise) {
-        C.resolve(promise).then(capability.resolve, reject);
-      });
-    });
-    if (result.e) reject(result.v);
-    return capability.promise;
-  }
-});
-
-
-/***/ }),
-
 /***/ "5537":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -3095,35 +2657,6 @@ $export.W = 32;  // wrap
 $export.U = 64;  // safe
 $export.R = 128; // real proto method for `library`
 module.exports = $export;
-
-
-/***/ }),
-
-/***/ "5cc5":
-/***/ (function(module, exports, __webpack_require__) {
-
-var ITERATOR = __webpack_require__("2b4c")('iterator');
-var SAFE_CLOSING = false;
-
-try {
-  var riter = [7][ITERATOR]();
-  riter['return'] = function () { SAFE_CLOSING = true; };
-  // eslint-disable-next-line no-throw-literal
-  Array.from(riter, function () { throw 2; });
-} catch (e) { /* empty */ }
-
-module.exports = function (exec, skipClosing) {
-  if (!skipClosing && !SAFE_CLOSING) return false;
-  var safe = false;
-  try {
-    var arr = [7];
-    var iter = arr[ITERATOR]();
-    iter.next = function () { return { done: safe = true }; };
-    arr[ITERATOR] = function () { return iter; };
-    exec(arr);
-  } catch (e) { /* empty */ }
-  return safe;
-};
 
 
 /***/ }),
@@ -3536,6 +3069,28 @@ module.exports = function (TO_STRING) {
 
 /***/ }),
 
+/***/ "7514":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+// 22.1.3.8 Array.prototype.find(predicate, thisArg = undefined)
+var $export = __webpack_require__("5ca1");
+var $find = __webpack_require__("0a49")(5);
+var KEY = 'find';
+var forced = true;
+// Shouldn't skip holes
+if (KEY in []) Array(1)[KEY](function () { forced = false; });
+$export($export.P + $export.F * forced, 'Array', {
+  find: function find(callbackfn /* , that = undefined */) {
+    return $find(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
+  }
+});
+__webpack_require__("9c6c")(KEY);
+
+
+/***/ }),
+
 /***/ "765d":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -3615,27 +3170,6 @@ module.exports = function (exec) {
   } catch (e) {
     return true;
   }
-};
-
-
-/***/ }),
-
-/***/ "7a56":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var global = __webpack_require__("7726");
-var dP = __webpack_require__("86cc");
-var DESCRIPTORS = __webpack_require__("9e1e");
-var SPECIES = __webpack_require__("2b4c")('species');
-
-module.exports = function (KEY) {
-  var C = global[KEY];
-  if (DESCRIPTORS && C && !C[SPECIES]) dP.f(C, SPECIES, {
-    configurable: true,
-    get: function () { return this; }
-  });
 };
 
 
@@ -3735,82 +3269,6 @@ NAME in FProto || __webpack_require__("9e1e") && dP(FProto, NAME, {
     }
   }
 });
-
-
-/***/ }),
-
-/***/ "8079":
-/***/ (function(module, exports, __webpack_require__) {
-
-var global = __webpack_require__("7726");
-var macrotask = __webpack_require__("1991").set;
-var Observer = global.MutationObserver || global.WebKitMutationObserver;
-var process = global.process;
-var Promise = global.Promise;
-var isNode = __webpack_require__("2d95")(process) == 'process';
-
-module.exports = function () {
-  var head, last, notify;
-
-  var flush = function () {
-    var parent, fn;
-    if (isNode && (parent = process.domain)) parent.exit();
-    while (head) {
-      fn = head.fn;
-      head = head.next;
-      try {
-        fn();
-      } catch (e) {
-        if (head) notify();
-        else last = undefined;
-        throw e;
-      }
-    } last = undefined;
-    if (parent) parent.enter();
-  };
-
-  // Node.js
-  if (isNode) {
-    notify = function () {
-      process.nextTick(flush);
-    };
-  // browsers with MutationObserver, except iOS Safari - https://github.com/zloirock/core-js/issues/339
-  } else if (Observer && !(global.navigator && global.navigator.standalone)) {
-    var toggle = true;
-    var node = document.createTextNode('');
-    new Observer(flush).observe(node, { characterData: true }); // eslint-disable-line no-new
-    notify = function () {
-      node.data = toggle = !toggle;
-    };
-  // environments with maybe non-completely correct, but existent Promise
-  } else if (Promise && Promise.resolve) {
-    // Promise.resolve without an argument throws an error in LG WebOS 2
-    var promise = Promise.resolve(undefined);
-    notify = function () {
-      promise.then(flush);
-    };
-  // for other environments - macrotask based on:
-  // - setImmediate
-  // - MessageChannel
-  // - window.postMessag
-  // - onreadystatechange
-  // - setTimeout
-  } else {
-    notify = function () {
-      // strange IE + webpack dev server bug - use .call(global)
-      macrotask.call(global, flush);
-    };
-  }
-
-  return function (fn) {
-    var task = { fn: fn, next: undefined };
-    if (last) last.next = task;
-    if (!head) {
-      head = task;
-      notify();
-    } last = task;
-  };
-};
 
 
 /***/ }),
@@ -5029,20 +4487,6 @@ module.exports = function (key) {
 
 /***/ }),
 
-/***/ "9c80":
-/***/ (function(module, exports) {
-
-module.exports = function (exec) {
-  try {
-    return { e: false, v: exec() };
-  } catch (e) {
-    return { e: true, v: e };
-  }
-};
-
-
-/***/ }),
-
 /***/ "9def":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -5143,17 +4587,6 @@ var exports = module.exports = function (iterable, entries, fn, that, ITERATOR) 
 };
 exports.BREAK = BREAK;
 exports.RETURN = RETURN;
-
-
-/***/ }),
-
-/***/ "a25f":
-/***/ (function(module, exports, __webpack_require__) {
-
-var global = __webpack_require__("7726");
-var navigator = global.navigator;
-
-module.exports = navigator && navigator.userAgent || '';
 
 
 /***/ }),
@@ -5280,32 +4713,6 @@ __webpack_require__("214f")('replace', 2, function (defined, REPLACE, $replace, 
     });
   }
 });
-
-
-/***/ }),
-
-/***/ "a5b8":
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-// 25.4.1.5 NewPromiseCapability(C)
-var aFunction = __webpack_require__("d8e8");
-
-function PromiseCapability(C) {
-  var resolve, reject;
-  this.promise = new C(function ($$resolve, $$reject) {
-    if (resolve !== undefined || reject !== undefined) throw TypeError('Bad Promise constructor');
-    resolve = $$resolve;
-    reject = $$reject;
-  });
-  this.resolve = aFunction(resolve);
-  this.reject = aFunction(reject);
-}
-
-module.exports.f = function (C) {
-  return new PromiseCapability(C);
-};
 
 
 /***/ }),
@@ -5582,25 +4989,6 @@ var global = __webpack_require__("e53d");
 var navigator = global.navigator;
 
 module.exports = navigator && navigator.userAgent || '';
-
-
-/***/ }),
-
-/***/ "bcaa":
-/***/ (function(module, exports, __webpack_require__) {
-
-var anObject = __webpack_require__("cb7c");
-var isObject = __webpack_require__("d3f4");
-var newPromiseCapability = __webpack_require__("a5b8");
-
-module.exports = function (C, x) {
-  anObject(C);
-  if (isObject(x) && x.constructor === C) return x;
-  var promiseCapability = newPromiseCapability.f(C);
-  var resolve = promiseCapability.resolve;
-  resolve(x);
-  return promiseCapability.promise;
-};
 
 
 /***/ }),
@@ -5933,6 +5321,19 @@ exports.f = __webpack_require__("5168");
 
 /***/ }),
 
+/***/ "cd1c":
+/***/ (function(module, exports, __webpack_require__) {
+
+// 9.4.2.3 ArraySpeciesCreate(originalArray, length)
+var speciesConstructor = __webpack_require__("e853");
+
+module.exports = function (original, length) {
+  return new (speciesConstructor(original))(length);
+};
+
+
+/***/ }),
+
 /***/ "cd78":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -6118,18 +5519,6 @@ var store = global[SHARED] || (global[SHARED] = {});
 
 /***/ }),
 
-/***/ "dcbc":
-/***/ (function(module, exports, __webpack_require__) {
-
-var redefine = __webpack_require__("2aba");
-module.exports = function (target, src, safe) {
-  for (var key in src) redefine(target, key, src[key], safe);
-  return target;
-};
-
-
-/***/ }),
-
 /***/ "e11e":
 /***/ (function(module, exports) {
 
@@ -6190,17 +5579,24 @@ module.exports = function (object, names) {
 
 /***/ }),
 
-/***/ "ebd6":
+/***/ "e853":
 /***/ (function(module, exports, __webpack_require__) {
 
-// 7.3.20 SpeciesConstructor(O, defaultConstructor)
-var anObject = __webpack_require__("cb7c");
-var aFunction = __webpack_require__("d8e8");
+var isObject = __webpack_require__("d3f4");
+var isArray = __webpack_require__("1169");
 var SPECIES = __webpack_require__("2b4c")('species');
-module.exports = function (O, D) {
-  var C = anObject(O).constructor;
-  var S;
-  return C === undefined || (S = anObject(C)[SPECIES]) == undefined ? D : aFunction(S);
+
+module.exports = function (original) {
+  var C;
+  if (isArray(original)) {
+    C = original.constructor;
+    // cross-realm fallback
+    if (typeof C == 'function' && (C === Array || isArray(C.prototype))) C = undefined;
+    if (isObject(C)) {
+      C = C[SPECIES];
+      if (C === null) C = undefined;
+    }
+  } return C === undefined ? Array : C;
 };
 
 
@@ -6287,18 +5683,6 @@ module.exports = function (O, D) {
 
 __webpack_require__("1af6");
 module.exports = __webpack_require__("584a").Array.isArray;
-
-
-/***/ }),
-
-/***/ "f605":
-/***/ (function(module, exports) {
-
-module.exports = function (it, Constructor, name, forbiddenField) {
-  if (!(it instanceof Constructor) || (forbiddenField !== undefined && forbiddenField in it)) {
-    throw TypeError(name + ': incorrect invocation!');
-  } return it;
-};
 
 
 /***/ }),
@@ -6411,16 +5795,16 @@ if (typeof window !== 'undefined') {
 // EXTERNAL MODULE: ./node_modules/core-js/modules/es6.function.name.js
 var es6_function_name = __webpack_require__("7f7f");
 
-// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"194b9414-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/components/flowchart/Flowchart.vue?vue&type=template&id=6ea85185&
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"194b9414-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/components/flowchart/Flowchart.vue?vue&type=template&id=50f99bb6&
 var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{style:({
     width: isNaN(_vm.width) ? _vm.width : _vm.width + 'px',
     height: isNaN(_vm.height) ? _vm.height : _vm.height + 'px',
     cursor: _vm.cursor,
-  }),attrs:{"id":"chart","tabindex":"0"},on:{"mousemove":_vm.handleChartMouseMove,"mouseup":_vm.handleChartMouseUp,"dblclick":function($event){return _vm.handleChartDblClick($event)},"mousewheel":_vm.handleChartMouseWheel,"mousedown":function($event){return _vm.handleChartMouseDown($event)}}},[_c('span',{staticClass:"unselectable",attrs:{"id":"position"}},[_vm._v("\n    "+_vm._s(_vm.cursorToChartOffset.x + ", " + _vm.cursorToChartOffset.y)+"\n  ")]),_c('svg',{attrs:{"id":"svg"}},[_c('rect',{staticClass:"selection",attrs:{"height":"0","width":"0"}})])])}
+  }),attrs:{"id":"chart","tabindex":"0"},on:{"mousemove":_vm.handleChartMouseMove,"mouseup":_vm.handleChartMouseUp,"dblclick":function($event){return _vm.handleChartDblClick($event)},"mousewheel":_vm.handleChartMouseWheel,"mousedown":function($event){return _vm.handleChartMouseDown($event)}}},[_c('svg',{attrs:{"id":"svg"}},[_c('rect',{staticClass:"selection",attrs:{"height":"0","width":"0"}})])])}
 var staticRenderFns = []
 
 
-// CONCATENATED MODULE: ./src/components/flowchart/Flowchart.vue?vue&type=template&id=6ea85185&
+// CONCATENATED MODULE: ./src/components/flowchart/Flowchart.vue?vue&type=template&id=50f99bb6&
 
 // EXTERNAL MODULE: ./node_modules/@babel/runtime-corejs2/core-js/symbol/iterator.js
 var iterator = __webpack_require__("5d58");
@@ -6498,8 +5882,8 @@ var es7_symbol_async_iterator = __webpack_require__("ac4d");
 // EXTERNAL MODULE: ./node_modules/core-js/modules/es6.symbol.js
 var es6_symbol = __webpack_require__("8a81");
 
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es6.promise.js
-var es6_promise = __webpack_require__("551c");
+// EXTERNAL MODULE: ./node_modules/core-js/modules/es6.array.find.js
+var es6_array_find = __webpack_require__("7514");
 
 // EXTERNAL MODULE: ./node_modules/core-js/modules/web.dom.iterable.js
 var web_dom_iterable = __webpack_require__("ac6a");
@@ -19301,6 +18685,139 @@ function getDirection(x1, y1, x2, y2) {
 }
 
 
+// CONCATENATED MODULE: ./src/handlers.js
+
+
+
+
+
+var dragStart = function dragStart(_this, node) {
+  // handle mousedown
+  var isNotCurrentNode = !_this.currentNodes.find(function (item) {
+    return item === node;
+  });
+
+  if (isNotCurrentNode) {
+    _this.currentConnections.splice(0, _this.currentConnections.length);
+
+    _this.currentNodes.splice(0, _this.currentNodes.length);
+
+    _this.currentNodes.push(node);
+  }
+
+  if (_this.clickedOnce) {
+    _this.currentNodes.splice(0, _this.currentNodes.length);
+
+    _this.editNode(node);
+  } else {
+    var timer = setTimeout(function () {
+      _this.clickedOnce = false;
+      clearTimeout(timer);
+    }, 300);
+    _this.clickedOnce = true;
+  }
+};
+var handlers_dragMove = function dragMove(_this) {
+  if (_this.readonly) {
+    return;
+  }
+
+  var zoom = parseFloat(document.getElementById("svg").style.zoom || 1);
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = _this.currentNodes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var currentNode = _step.value;
+      var x = on_event.dx / zoom;
+
+      if (currentNode.x + x < 0) {
+        x = -currentNode.x;
+      }
+
+      currentNode.x += x;
+      var y = on_event.dy / zoom;
+
+      if (currentNode.y + y < 0) {
+        y = -currentNode.y;
+      }
+
+      currentNode.y += y;
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return != null) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
+  src_selectAll("#svg > g.guideline").remove();
+
+  var edge = _this.getCurrentNodesEdge();
+
+  var expectX = Math.round(Math.round(edge.start.x) / 10) * 10;
+  var expectY = Math.round(Math.round(edge.start.y) / 10) * 10;
+
+  _this.nodes.forEach(function (item) {
+    if (_this.currentNodes.filter(function (currentNode) {
+      return currentNode === item;
+    }).length === 0) {
+      if (item.x === expectX) {
+        // vertical guideline
+        if (item.y < expectY) {
+          _this.guideLineTo(item.x, item.y + item.height, expectX, expectY);
+        } else {
+          _this.guideLineTo(expectX, expectY + item.height, item.x, item.y);
+        }
+      }
+
+      if (item.y === expectY) {
+        // horizontal guideline
+        if (item.x < expectX) {
+          _this.guideLineTo(item.x + item.width, item.y, expectX, expectY);
+        } else {
+          _this.guideLineTo(expectX + item.width, expectY, item.x, item.y);
+        }
+      }
+    }
+  });
+};
+var handlers_dragEnd = function dragEnd(_this) {
+  src_selectAll("#svg > g.guideline").remove();
+  var _iteratorNormalCompletion2 = true;
+  var _didIteratorError2 = false;
+  var _iteratorError2 = undefined;
+
+  try {
+    for (var _iterator2 = _this.currentNodes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+      var currentNode = _step2.value;
+      currentNode.x = Math.round(Math.round(currentNode.x) / 10) * 10;
+      currentNode.y = Math.round(Math.round(currentNode.y) / 10) * 10;
+    }
+  } catch (err) {
+    _didIteratorError2 = true;
+    _iteratorError2 = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion2 && _iterator2.return != null) {
+        _iterator2.return();
+      }
+    } finally {
+      if (_didIteratorError2) {
+        throw _iteratorError2;
+      }
+    }
+  }
+};
 // CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js??ref--12-0!./node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/components/flowchart/Flowchart.vue?vue&type=script&lang=js&
 
 
@@ -19334,9 +18851,7 @@ function getDirection(x1, y1, x2, y2) {
 //
 //
 //
-//
-//
-//
+
 
 
 
@@ -19587,22 +19102,22 @@ function getDirection(x1, y1, x2, y2) {
       };
     },
     renderSelection: function renderSelection() {
-      var that = this; // render selection rectangle
+      var _this = this;
 
-      if (that.selectionInfo) {
-        that.currentNodes.splice(0, that.currentNodes.length);
-        that.currentConnections.splice(0, that.currentConnections.length);
+      if (this.selectionInfo) {
+        this.currentNodes.splice(0, this.currentNodes.length);
+        this.currentConnections.splice(0, this.currentConnections.length);
         var edge = getEdgeOfPoints([{
-          x: that.selectionInfo.x,
-          y: that.selectionInfo.y
+          x: this.selectionInfo.x,
+          y: this.selectionInfo.y
         }, {
-          x: that.cursorToChartOffset.x,
-          y: that.cursorToChartOffset.y
+          x: this.cursorToChartOffset.x,
+          y: this.cursorToChartOffset.y
         }]);
         var svg = src_select("#svg");
         var rect = svg.select(".selection").classed("active", true);
         rect.attr("x", edge.start.x).attr("y", edge.start.y).attr("width", edge.end.x - edge.start.x).attr("height", edge.end.y - edge.start.y);
-        that.nodes.forEach(function (item) {
+        this.nodes.forEach(function (item) {
           var points = [{
             x: item.x,
             y: item.y
@@ -19620,10 +19135,10 @@ function getDirection(x1, y1, x2, y2) {
           if (points.every(function (point) {
             return pointRectangleIntersection(point, edge);
           })) {
-            that.currentNodes.push(item);
+            _this.currentNodes.push(item);
           }
         });
-        that.lines.forEach(function (line) {
+        this.lines.forEach(function (line) {
           var points = [{
             x: line.sourceX,
             y: line.sourceY
@@ -19634,141 +19149,168 @@ function getDirection(x1, y1, x2, y2) {
 
           if (points.every(function (point) {
             return pointRectangleIntersection(point, edge);
-          }) && that.currentConnections.every(function (item) {
+          }) && _this.currentConnections.every(function (item) {
             return item.id !== line.id;
           })) {
-            var connection = that.connections.filter(function (conn) {
+            var connection = _this.connections.find(function (conn) {
               return conn.id === line.id;
-            })[0];
-            that.currentConnections.push(connection);
+            });
+
+            _this.currentConnections.push(connection);
           }
         });
       } else {
         src_selectAll("#svg > .selection").classed("active", false);
       }
     },
-    renderConnections: function renderConnections() {
-      var that = this;
-      return new Promise(function (resolve) {
-        that.$nextTick(function () {
-          src_selectAll("#svg > g.connection").remove(); // render lines
-
-          that.lines = [];
-          that.connections.forEach(function (conn) {
-            var sourcePosition = that.getNodeConnectorOffset(conn.source.id, conn.source.position);
-            var destinationPosition = that.getNodeConnectorOffset(conn.destination.id, conn.destination.position);
-            var colors = {
-              pass: "#52c41a",
-              reject: "red"
-            };
-
-            if (that.currentConnections.filter(function (item) {
-              return item === conn;
-            }).length > 0) {
-              colors = {
-                pass: "#12640a",
-                reject: "darkred"
-              };
-            }
-
-            var result = that.arrowTo(sourcePosition.x, sourcePosition.y, destinationPosition.x, destinationPosition.y, conn.source.position, conn.destination.position, colors[conn.type]);
-            var _iteratorNormalCompletion = true;
-            var _didIteratorError = false;
-            var _iteratorError = undefined;
-
-            try {
-              for (var _iterator = result.paths[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                var path = _step.value;
-                path.on("mousedown", function () {
-                  on_event.stopPropagation();
-
-                  if (that.pathClickedOnce) {
-                    that.editConnection(conn);
-                  } else {
-                    var timer = setTimeout(function () {
-                      that.pathClickedOnce = false;
-                      clearTimeout(timer);
-                    }, 300);
-                    that.pathClickedOnce = true;
-                  }
-
-                  that.currentNodes.splice(0, that.currentNodes.length);
-                  that.currentConnections.splice(0, that.currentConnections.length);
-                  that.currentConnections.push(conn);
-                });
-              }
-            } catch (err) {
-              _didIteratorError = true;
-              _iteratorError = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion && _iterator.return != null) {
-                  _iterator.return();
-                }
-              } finally {
-                if (_didIteratorError) {
-                  throw _iteratorError;
-                }
-              }
-            }
-
-            var _iteratorNormalCompletion2 = true;
-            var _didIteratorError2 = false;
-            var _iteratorError2 = undefined;
-
-            try {
-              for (var _iterator2 = result.lines[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                var line = _step2.value;
-                that.lines.push({
-                  sourceX: line.sourceX,
-                  sourceY: line.sourceY,
-                  destinationX: line.destinationX,
-                  destinationY: line.destinationY,
-                  id: conn.id
-                });
-              }
-            } catch (err) {
-              _didIteratorError2 = true;
-              _iteratorError2 = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion2 && _iterator2.return != null) {
-                  _iterator2.return();
-                }
-              } finally {
-                if (_didIteratorError2) {
-                  throw _iteratorError2;
-                }
-              }
-            }
-          });
-          resolve();
-        });
-      });
-    },
-    renderNodes: function () {
-      var _renderNodes = _asyncToGenerator(
+    renderConnections: function () {
+      var _renderConnections = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee3() {
-        var _this = this;
+        var _this2 = this;
 
         return regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
+                this.$nextTick(function () {
+                  src_selectAll("#svg > g.connection").remove(); // render lines
+
+                  _this2.lines = [];
+
+                  _this2.connections.forEach(function (conn) {
+                    var sourcePosition = _this2.getNodeConnectorOffset(conn.source.id, conn.source.position);
+
+                    var destinationPosition = _this2.getNodeConnectorOffset(conn.destination.id, conn.destination.position);
+
+                    var colors = {
+                      pass: "#52c41a",
+                      reject: "red"
+                    };
+
+                    if (_this2.currentConnections.filter(function (item) {
+                      return item === conn;
+                    }).length > 0) {
+                      colors = {
+                        pass: "#12640a",
+                        reject: "darkred"
+                      };
+                    }
+
+                    var result = _this2.arrowTo(sourcePosition.x, sourcePosition.y, destinationPosition.x, destinationPosition.y, conn.source.position, conn.destination.position, colors[conn.type]);
+
+                    var _iteratorNormalCompletion = true;
+                    var _didIteratorError = false;
+                    var _iteratorError = undefined;
+
+                    try {
+                      for (var _iterator = result.paths[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                        var path = _step.value;
+                        path.on("mousedown", function () {
+                          on_event.stopPropagation();
+
+                          if (_this2.pathClickedOnce) {
+                            _this2.editConnection(conn);
+                          } else {
+                            var timer = setTimeout(function () {
+                              this.pathClickedOnce = false;
+                              clearTimeout(timer);
+                            }, 300);
+                            _this2.pathClickedOnce = true;
+                          }
+
+                          _this2.currentNodes.splice(0, _this2.currentNodes.length);
+
+                          _this2.currentConnections.splice(0, _this2.currentConnections.length);
+
+                          _this2.currentConnections.push(conn);
+                        });
+                      }
+                    } catch (err) {
+                      _didIteratorError = true;
+                      _iteratorError = err;
+                    } finally {
+                      try {
+                        if (!_iteratorNormalCompletion && _iterator.return != null) {
+                          _iterator.return();
+                        }
+                      } finally {
+                        if (_didIteratorError) {
+                          throw _iteratorError;
+                        }
+                      }
+                    }
+
+                    var _iteratorNormalCompletion2 = true;
+                    var _didIteratorError2 = false;
+                    var _iteratorError2 = undefined;
+
+                    try {
+                      for (var _iterator2 = result.lines[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                        var line = _step2.value;
+
+                        _this2.lines.push({
+                          sourceX: line.sourceX,
+                          sourceY: line.sourceY,
+                          destinationX: line.destinationX,
+                          destinationY: line.destinationY,
+                          id: conn.id
+                        });
+                      }
+                    } catch (err) {
+                      _didIteratorError2 = true;
+                      _iteratorError2 = err;
+                    } finally {
+                      try {
+                        if (!_iteratorNormalCompletion2 && _iterator2.return != null) {
+                          _iterator2.return();
+                        }
+                      } finally {
+                        if (_didIteratorError2) {
+                          throw _iteratorError2;
+                        }
+                      }
+                    }
+                  });
+                });
+
+              case 1:
+              case "end":
+                return _context3.stop();
+            }
+          }
+        }, _callee3, this);
+      }));
+
+      function renderConnections() {
+        return _renderConnections.apply(this, arguments);
+      }
+
+      return renderConnections;
+    }(),
+    renderNodes: function () {
+      var _renderNodes = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee4() {
+        var _this3 = this;
+
+        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
                 src_selectAll("#svg > g.node").remove();
                 this.nodes.forEach(function (node) {
-                  _this.renderNode(node, _this.currentNodes.filter(function (item) {
+                  _this3.renderNode(node, _this3.currentNodes.filter(function (item) {
                     return item === node;
                   }).length > 0);
                 });
 
               case 2:
               case "end":
-                return _context3.stop();
+                return _context4.stop();
             }
           }
-        }, _callee3, this);
+        }, _callee4, this);
       }));
 
       function renderNodes() {
@@ -19795,177 +19337,40 @@ function getDirection(x1, y1, x2, y2) {
     arrowTo: function arrowTo(x1, y1, x2, y2, startPosition, endPosition, color) {
       var g = this.append("g");
       g.classed("connection", true);
-      connect(g, x1, y1, x2, y2, startPosition, endPosition, 1, color || "#a3a3a3", true); // a 5px cover to make mouse operation conveniently
+      connect(g, x1, y1, x2, y2, startPosition, endPosition, 1, color || "#a3a3a3", true); // a 10px cover to make mouse operation conveniently
 
-      return connect(g, x1, y1, x2, y2, startPosition, endPosition, 5, "transparent", false);
+      return connect(g, x1, y1, x2, y2, startPosition, endPosition, 10, "transparent", false);
     },
     renderNode: function renderNode(node, isSelected) {
-      var that = this;
-      var g = that.append("g").attr("cursor", "move").classed("node", true);
+      var _this4 = this;
+
+      var g = this.append("g").attr("cursor", "move").classed("node", true);
 
       if (node.render) {
         node.render(g, isSelected);
       }
 
       var drag = src_drag().on("start", function () {
-        // handle mousedown
-        var isNotCurrentNode = that.currentNodes.filter(function (item) {
-          return item === node;
-        }).length === 0;
-
-        if (isNotCurrentNode) {
-          that.currentConnections.splice(0, that.currentConnections.length);
-          that.currentNodes.splice(0, that.currentNodes.length);
-          that.currentNodes.push(node);
-        }
-
-        if (that.clickedOnce) {
-          that.currentNodes.splice(0, that.currentNodes.length);
-          that.editNode(node);
-        } else {
-          var timer = setTimeout(function () {
-            that.clickedOnce = false;
-            clearTimeout(timer);
-          }, 300);
-          that.clickedOnce = true;
-        }
+        dragStart(_this4, node);
       }).on("drag",
       /*#__PURE__*/
       _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee4() {
-        var zoom, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, currentNode, x, y, edge, expectX, expectY;
-
-        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+      regeneratorRuntime.mark(function _callee5() {
+        return regeneratorRuntime.wrap(function _callee5$(_context5) {
           while (1) {
-            switch (_context4.prev = _context4.next) {
+            switch (_context5.prev = _context5.next) {
               case 0:
-                if (!that.readonly) {
-                  _context4.next = 2;
-                  break;
-                }
+                handlers_dragMove(_this4, node);
 
-                return _context4.abrupt("return");
-
-              case 2:
-                zoom = parseFloat(document.getElementById("svg").style.zoom || 1);
-                _iteratorNormalCompletion3 = true;
-                _didIteratorError3 = false;
-                _iteratorError3 = undefined;
-                _context4.prev = 6;
-
-                for (_iterator3 = that.currentNodes[Symbol.iterator](); !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-                  currentNode = _step3.value;
-                  x = on_event.dx / zoom;
-
-                  if (currentNode.x + x < 0) {
-                    x = -currentNode.x;
-                  }
-
-                  currentNode.x += x;
-                  y = on_event.dy / zoom;
-
-                  if (currentNode.y + y < 0) {
-                    y = -currentNode.y;
-                  }
-
-                  currentNode.y += y;
-                }
-
-                _context4.next = 14;
-                break;
-
-              case 10:
-                _context4.prev = 10;
-                _context4.t0 = _context4["catch"](6);
-                _didIteratorError3 = true;
-                _iteratorError3 = _context4.t0;
-
-              case 14:
-                _context4.prev = 14;
-                _context4.prev = 15;
-
-                if (!_iteratorNormalCompletion3 && _iterator3.return != null) {
-                  _iterator3.return();
-                }
-
-              case 17:
-                _context4.prev = 17;
-
-                if (!_didIteratorError3) {
-                  _context4.next = 20;
-                  break;
-                }
-
-                throw _iteratorError3;
-
-              case 20:
-                return _context4.finish(17);
-
-              case 21:
-                return _context4.finish(14);
-
-              case 22:
-                src_selectAll("#svg > g.guideline").remove();
-                edge = that.getCurrentNodesEdge();
-                expectX = Math.round(Math.round(edge.start.x) / 10) * 10;
-                expectY = Math.round(Math.round(edge.start.y) / 10) * 10;
-                that.nodes.forEach(function (item) {
-                  if (that.currentNodes.filter(function (currentNode) {
-                    return currentNode === item;
-                  }).length === 0) {
-                    if (item.x === expectX) {
-                      // vertical guideline
-                      if (item.y < expectY) {
-                        that.guideLineTo(item.x, item.y + item.height, expectX, expectY);
-                      } else {
-                        that.guideLineTo(expectX, expectY + item.height, item.x, item.y);
-                      }
-                    }
-
-                    if (item.y === expectY) {
-                      // horizontal guideline
-                      if (item.x < expectX) {
-                        that.guideLineTo(item.x + item.width, item.y, expectX, expectY);
-                      } else {
-                        that.guideLineTo(expectX + item.width, expectY, item.x, item.y);
-                      }
-                    }
-                  }
-                });
-
-              case 27:
+              case 1:
               case "end":
-                return _context4.stop();
+                return _context5.stop();
             }
           }
-        }, _callee4, null, [[6, 10, 14, 22], [15,, 17, 21]]);
+        }, _callee5);
       }))).on("end", function () {
-        src_selectAll("#svg > g.guideline").remove();
-        var _iteratorNormalCompletion4 = true;
-        var _didIteratorError4 = false;
-        var _iteratorError4 = undefined;
-
-        try {
-          for (var _iterator4 = that.currentNodes[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-            var currentNode = _step4.value;
-            currentNode.x = Math.round(Math.round(currentNode.x) / 10) * 10;
-            currentNode.y = Math.round(Math.round(currentNode.y) / 10) * 10;
-          }
-        } catch (err) {
-          _didIteratorError4 = true;
-          _iteratorError4 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion4 && _iterator4.return != null) {
-              _iterator4.return();
-            }
-          } finally {
-            if (_didIteratorError4) {
-              throw _iteratorError4;
-            }
-          }
-        }
+        handlers_dragEnd(_this4, node);
       });
       g.call(drag);
       g.on("mousedown", function () {
@@ -19974,14 +19379,14 @@ function getDirection(x1, y1, x2, y2) {
           return;
         }
 
-        var isNotCurrentNode = that.currentNodes.filter(function (item) {
+        var isNotCurrentNode = !_this4.currentNodes.find(function (item) {
           return item === node;
-        }).length === 0;
+        });
 
         if (isNotCurrentNode) {
-          that.currentNodes.push(node);
+          _this4.currentNodes.push(node);
         } else {
-          that.currentNodes.splice(that.currentNodes.indexOf(node), 1);
+          _this4.currentNodes.splice(_this4.currentNodes.indexOf(node), 1);
         }
       });
       var connectors = [];
@@ -19993,23 +19398,23 @@ function getDirection(x1, y1, x2, y2) {
         connector.on("mousedown", function () {
           on_event.stopPropagation();
 
-          if (node.type === "end" || that.readonly) {
+          if (node.type === "end" || _this4.readonly) {
             return;
           }
 
-          that.connectingInfo.source = node;
-          that.connectingInfo.sourcePosition = position;
+          _this4.connectingInfo.source = node;
+          _this4.connectingInfo.sourcePosition = position;
         }).on("mouseup", function () {
           on_event.stopPropagation();
 
-          if (that.connectingInfo.source) {
-            if (that.connectingInfo.source.id !== node.id) {
+          if (this.connectingInfo.source) {
+            if (this.connectingInfo.source.id !== node.id) {
               // Node can't connect to itself
               var tempId = +new Date();
               var conn = {
                 source: {
-                  id: that.connectingInfo.source.id,
-                  position: that.connectingInfo.sourcePosition
+                  id: this.connectingInfo.source.id,
+                  position: this.connectingInfo.sourcePosition
                 },
                 destination: {
                   id: node.id,
@@ -20019,12 +19424,12 @@ function getDirection(x1, y1, x2, y2) {
                 type: "pass",
                 name: "Pass"
               };
-              that.connections.push(conn);
-              that.$emit("connect", conn, that.nodes, that.connections);
+              this.connections.push(conn);
+              this.$emit("connect", conn, this.nodes, this.connections);
             }
 
-            that.connectingInfo.source = null;
-            that.connectingInfo.sourcePosition = null;
+            this.connectingInfo.source = null;
+            this.connectingInfo.sourcePosition = null;
           }
         }).on("mouseover", function () {
           connector.classed("active", true);
@@ -20073,130 +19478,130 @@ function getDirection(x1, y1, x2, y2) {
     remove: function () {
       var _remove = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee5() {
-        var _iteratorNormalCompletion5, _didIteratorError5, _iteratorError5, _iterator5, _step5, conn, _iteratorNormalCompletion6, _didIteratorError6, _iteratorError6, _iterator6, _step6, node;
+      regeneratorRuntime.mark(function _callee6() {
+        var _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, conn, _iteratorNormalCompletion4, _didIteratorError4, _iteratorError4, _iterator4, _step4, node;
 
-        return regeneratorRuntime.wrap(function _callee5$(_context5) {
+        return regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
-            switch (_context5.prev = _context5.next) {
+            switch (_context6.prev = _context6.next) {
               case 0:
                 if (!this.readonly) {
-                  _context5.next = 2;
+                  _context6.next = 2;
                   break;
                 }
 
-                return _context5.abrupt("return");
+                return _context6.abrupt("return");
 
               case 2:
                 if (!(this.currentConnections.length > 0)) {
-                  _context5.next = 23;
+                  _context6.next = 23;
                   break;
                 }
 
-                _iteratorNormalCompletion5 = true;
-                _didIteratorError5 = false;
-                _iteratorError5 = undefined;
-                _context5.prev = 6;
+                _iteratorNormalCompletion3 = true;
+                _didIteratorError3 = false;
+                _iteratorError3 = undefined;
+                _context6.prev = 6;
 
-                for (_iterator5 = this.currentConnections[Symbol.iterator](); !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-                  conn = _step5.value;
+                for (_iterator3 = this.currentConnections[Symbol.iterator](); !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+                  conn = _step3.value;
                   this.removeConnection(conn);
                 }
 
-                _context5.next = 14;
+                _context6.next = 14;
                 break;
 
               case 10:
-                _context5.prev = 10;
-                _context5.t0 = _context5["catch"](6);
-                _didIteratorError5 = true;
-                _iteratorError5 = _context5.t0;
+                _context6.prev = 10;
+                _context6.t0 = _context6["catch"](6);
+                _didIteratorError3 = true;
+                _iteratorError3 = _context6.t0;
 
               case 14:
-                _context5.prev = 14;
-                _context5.prev = 15;
+                _context6.prev = 14;
+                _context6.prev = 15;
 
-                if (!_iteratorNormalCompletion5 && _iterator5.return != null) {
-                  _iterator5.return();
+                if (!_iteratorNormalCompletion3 && _iterator3.return != null) {
+                  _iterator3.return();
                 }
 
               case 17:
-                _context5.prev = 17;
+                _context6.prev = 17;
 
-                if (!_didIteratorError5) {
-                  _context5.next = 20;
+                if (!_didIteratorError3) {
+                  _context6.next = 20;
                   break;
                 }
 
-                throw _iteratorError5;
+                throw _iteratorError3;
 
               case 20:
-                return _context5.finish(17);
+                return _context6.finish(17);
 
               case 21:
-                return _context5.finish(14);
+                return _context6.finish(14);
 
               case 22:
                 this.currentConnections.splice(0, this.currentConnections.length);
 
               case 23:
                 if (!(this.currentNodes.length > 0)) {
-                  _context5.next = 44;
+                  _context6.next = 44;
                   break;
                 }
 
-                _iteratorNormalCompletion6 = true;
-                _didIteratorError6 = false;
-                _iteratorError6 = undefined;
-                _context5.prev = 27;
+                _iteratorNormalCompletion4 = true;
+                _didIteratorError4 = false;
+                _iteratorError4 = undefined;
+                _context6.prev = 27;
 
-                for (_iterator6 = this.currentNodes[Symbol.iterator](); !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-                  node = _step6.value;
+                for (_iterator4 = this.currentNodes[Symbol.iterator](); !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+                  node = _step4.value;
                   this.removeNode(node);
                 }
 
-                _context5.next = 35;
+                _context6.next = 35;
                 break;
 
               case 31:
-                _context5.prev = 31;
-                _context5.t1 = _context5["catch"](27);
-                _didIteratorError6 = true;
-                _iteratorError6 = _context5.t1;
+                _context6.prev = 31;
+                _context6.t1 = _context6["catch"](27);
+                _didIteratorError4 = true;
+                _iteratorError4 = _context6.t1;
 
               case 35:
-                _context5.prev = 35;
-                _context5.prev = 36;
+                _context6.prev = 35;
+                _context6.prev = 36;
 
-                if (!_iteratorNormalCompletion6 && _iterator6.return != null) {
-                  _iterator6.return();
+                if (!_iteratorNormalCompletion4 && _iterator4.return != null) {
+                  _iterator4.return();
                 }
 
               case 38:
-                _context5.prev = 38;
+                _context6.prev = 38;
 
-                if (!_didIteratorError6) {
-                  _context5.next = 41;
+                if (!_didIteratorError4) {
+                  _context6.next = 41;
                   break;
                 }
 
-                throw _iteratorError6;
+                throw _iteratorError4;
 
               case 41:
-                return _context5.finish(38);
+                return _context6.finish(38);
 
               case 42:
-                return _context5.finish(35);
+                return _context6.finish(35);
 
               case 43:
                 this.currentNodes.splice(0, this.currentNodes.length);
 
               case 44:
               case "end":
-                return _context5.stop();
+                return _context6.stop();
             }
           }
-        }, _callee5, this, [[6, 10, 14, 22], [15,, 17, 21], [27, 31, 35, 43], [36,, 38, 42]]);
+        }, _callee6, this, [[6, 10, 14, 22], [15,, 17, 21], [27, 31, 35, 43], [36,, 38, 42]]);
       }));
 
       function remove() {
@@ -20209,14 +19614,161 @@ function getDirection(x1, y1, x2, y2) {
       var connections = this.connections.filter(function (item) {
         return item.source.id === node.id || item.destination.id === node.id;
       });
+      var _iteratorNormalCompletion5 = true;
+      var _didIteratorError5 = false;
+      var _iteratorError5 = undefined;
+
+      try {
+        for (var _iterator5 = connections[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+          var connection = _step5.value;
+          this.connections.splice(this.connections.indexOf(connection), 1);
+        }
+      } catch (err) {
+        _didIteratorError5 = true;
+        _iteratorError5 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion5 && _iterator5.return != null) {
+            _iterator5.return();
+          }
+        } finally {
+          if (_didIteratorError5) {
+            throw _iteratorError5;
+          }
+        }
+      }
+
+      this.nodes.splice(this.nodes.indexOf(node), 1);
+      this.$emit("delete", node, this.nodes, this.connections);
+    },
+    removeConnection: function removeConnection(conn) {
+      var index = this.connections.indexOf(conn);
+      this.connections.splice(index, 1);
+      this.$emit("disconnect", conn, this.nodes, this.connections);
+    },
+    moveCurrentNode: function moveCurrentNode(x, y) {
+      if (this.currentNodes.length > 0 && !this.readonly) {
+        var _iteratorNormalCompletion6 = true;
+        var _didIteratorError6 = false;
+        var _iteratorError6 = undefined;
+
+        try {
+          for (var _iterator6 = this.currentNodes[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+            var node = _step6.value;
+
+            if (node.x + x < 0) {
+              x = -node.x;
+            }
+
+            node.x += x;
+
+            if (node.y + y < 0) {
+              y = -node.y;
+            }
+
+            node.y += y;
+          }
+        } catch (err) {
+          _didIteratorError6 = true;
+          _iteratorError6 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion6 && _iterator6.return != null) {
+              _iterator6.return();
+            }
+          } finally {
+            if (_didIteratorError6) {
+              throw _iteratorError6;
+            }
+          }
+        }
+      }
+    }
+  },
+  mounted: function mounted() {
+    var _this5 = this;
+
+    this.renderNodes();
+    this.renderConnections();
+
+    document.onkeydown = function (event) {
+      switch (event.keyCode) {
+        case 37:
+          _this5.moveCurrentNode(-10, 0);
+
+          break;
+
+        case 38:
+          _this5.moveCurrentNode(0, -10);
+
+          break;
+
+        case 39:
+          _this5.moveCurrentNode(10, 0);
+
+          break;
+
+        case 40:
+          _this5.moveCurrentNode(0, 10);
+
+          break;
+
+        case 27:
+          _this5.currentNodes.splice(0, _this5.currentNodes.length);
+
+          _this5.currentConnections.splice(0, _this5.currentConnections.length);
+
+          break;
+
+        case 65:
+          if (document.activeElement === document.getElementById("chart")) {
+            var _this5$currentNodes, _this5$currentConnect;
+
+            _this5.currentNodes.splice(0, _this5.currentNodes.length);
+
+            _this5.currentConnections.splice(0, _this5.currentConnections.length);
+
+            (_this5$currentNodes = _this5.currentNodes).push.apply(_this5$currentNodes, _toConsumableArray(_this5.nodes));
+
+            (_this5$currentConnect = _this5.currentConnections).push.apply(_this5$currentConnect, _toConsumableArray(_this5.connections));
+
+            event.preventDefault();
+          }
+
+          break;
+
+        case 46:
+          _this5.remove();
+
+          break;
+
+        default:
+          break;
+      }
+    };
+  },
+  created: function created() {},
+  computed: {
+    hoveredConnector: function hoveredConnector() {
       var _iteratorNormalCompletion7 = true;
       var _didIteratorError7 = false;
       var _iteratorError7 = undefined;
 
       try {
-        for (var _iterator7 = connections[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-          var connection = _step7.value;
-          this.connections.splice(this.connections.indexOf(connection), 1);
+        for (var _iterator7 = this.nodes[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+          var node = _step7.value;
+          var connectorPosition = this.getConnectorPosition(node);
+
+          for (var prop in connectorPosition) {
+            var entry = connectorPosition[prop];
+
+            if (Math.hypot(entry.x - this.cursorToChartOffset.x, entry.y - this.cursorToChartOffset.y) < 10) {
+              return {
+                position: prop,
+                node: node
+              };
+            }
+          }
         }
       } catch (err) {
         _didIteratorError7 = true;
@@ -20233,169 +19785,22 @@ function getDirection(x1, y1, x2, y2) {
         }
       }
 
-      this.nodes.splice(this.nodes.indexOf(node), 1);
-      this.$emit("delete", node, this.nodes, this.connections);
-    },
-    removeConnection: function removeConnection(conn) {
-      var index = this.connections.indexOf(conn);
-      this.connections.splice(index, 1);
-      this.$emit("disconnect", conn, this.nodes, this.connections);
-    },
-    moveCurrentNode: function moveCurrentNode(x, y) {
-      if (this.currentNodes.length > 0 && !this.readonly) {
-        var _iteratorNormalCompletion8 = true;
-        var _didIteratorError8 = false;
-        var _iteratorError8 = undefined;
-
-        try {
-          for (var _iterator8 = this.currentNodes[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-            var node = _step8.value;
-
-            if (node.x + x < 0) {
-              x = -node.x;
-            }
-
-            node.x += x;
-
-            if (node.y + y < 0) {
-              y = -node.y;
-            }
-
-            node.y += y;
-          }
-        } catch (err) {
-          _didIteratorError8 = true;
-          _iteratorError8 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion8 && _iterator8.return != null) {
-              _iterator8.return();
-            }
-          } finally {
-            if (_didIteratorError8) {
-              throw _iteratorError8;
-            }
-          }
-        }
-      }
-    }
-  },
-  mounted: function mounted() {
-    var _this2 = this;
-
-    this.renderNodes();
-    this.renderConnections();
-
-    document.onkeydown = function (event) {
-      switch (event.keyCode) {
-        case 37:
-          _this2.moveCurrentNode(-10, 0);
-
-          break;
-
-        case 38:
-          _this2.moveCurrentNode(0, -10);
-
-          break;
-
-        case 39:
-          _this2.moveCurrentNode(10, 0);
-
-          break;
-
-        case 40:
-          _this2.moveCurrentNode(0, 10);
-
-          break;
-
-        case 27:
-          _this2.currentNodes.splice(0, _this2.currentNodes.length);
-
-          _this2.currentConnections.splice(0, _this2.currentConnections.length);
-
-          break;
-
-        case 65:
-          if (document.activeElement === document.getElementById("chart")) {
-            var _this2$currentNodes, _this2$currentConnect;
-
-            _this2.currentNodes.splice(0, _this2.currentNodes.length);
-
-            _this2.currentConnections.splice(0, _this2.currentConnections.length);
-
-            (_this2$currentNodes = _this2.currentNodes).push.apply(_this2$currentNodes, _toConsumableArray(_this2.nodes));
-
-            (_this2$currentConnect = _this2.currentConnections).push.apply(_this2$currentConnect, _toConsumableArray(_this2.connections));
-
-            event.preventDefault();
-          }
-
-          break;
-
-        case 46:
-          _this2.remove();
-
-          break;
-
-        default:
-          break;
-      }
-    };
-  },
-  created: function created() {},
-  computed: {
-    hoveredConnector: function hoveredConnector() {
-      var _iteratorNormalCompletion9 = true;
-      var _didIteratorError9 = false;
-      var _iteratorError9 = undefined;
-
-      try {
-        for (var _iterator9 = this.nodes[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
-          var node = _step9.value;
-          var connectorPosition = this.getConnectorPosition(node);
-
-          for (var prop in connectorPosition) {
-            var entry = connectorPosition[prop];
-
-            if (Math.hypot(entry.x - this.cursorToChartOffset.x, entry.y - this.cursorToChartOffset.y) < 10) {
-              return {
-                position: prop,
-                node: node
-              };
-            }
-          }
-        }
-      } catch (err) {
-        _didIteratorError9 = true;
-        _iteratorError9 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion9 && _iterator9.return != null) {
-            _iterator9.return();
-          }
-        } finally {
-          if (_didIteratorError9) {
-            throw _iteratorError9;
-          }
-        }
-      }
-
       return null;
     },
     hoveredConnection: function hoveredConnection() {
-      var _this3 = this;
+      var _this6 = this;
 
-      var _iteratorNormalCompletion10 = true;
-      var _didIteratorError10 = false;
-      var _iteratorError10 = undefined;
+      var _iteratorNormalCompletion8 = true;
+      var _didIteratorError8 = false;
+      var _iteratorError8 = undefined;
 
       try {
         var _loop2 = function _loop2() {
-          var line = _step10.value;
-          var distance = distanceOfPointToLine(line.sourceX, line.sourceY, line.destinationX, line.destinationY, _this3.cursorToChartOffset.x, _this3.cursorToChartOffset.y);
+          var line = _step8.value;
+          var distance = distanceOfPointToLine(line.sourceX, line.sourceY, line.destinationX, line.destinationY, _this6.cursorToChartOffset.x, _this6.cursorToChartOffset.y);
 
-          if (distance < 5 && between(line.sourceX - 2, line.destinationX + 2, _this3.cursorToChartOffset.x) && between(line.sourceY - 2, line.destinationY + 2, _this3.cursorToChartOffset.y)) {
-            var connections = _this3.connections.filter(function (item) {
+          if (distance < 5 && between(line.sourceX - 2, line.destinationX + 2, _this6.cursorToChartOffset.x) && between(line.sourceY - 2, line.destinationY + 2, _this6.cursorToChartOffset.y)) {
+            var connections = _this6.connections.filter(function (item) {
               return item.id === line.id;
             });
 
@@ -20405,22 +19810,22 @@ function getDirection(x1, y1, x2, y2) {
           }
         };
 
-        for (var _iterator10 = this.lines[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
+        for (var _iterator8 = this.lines[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
           var _ret = _loop2();
 
           if (typeof_typeof(_ret) === "object") return _ret.v;
         }
       } catch (err) {
-        _didIteratorError10 = true;
-        _iteratorError10 = err;
+        _didIteratorError8 = true;
+        _iteratorError8 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion10 && _iterator10.return != null) {
-            _iterator10.return();
+          if (!_iteratorNormalCompletion8 && _iterator8.return != null) {
+            _iterator8.return();
           }
         } finally {
-          if (_didIteratorError10) {
-            throw _iteratorError10;
+          if (_didIteratorError8) {
+            throw _iteratorError8;
           }
         }
       }

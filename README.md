@@ -38,7 +38,7 @@ npm i @peterkmoss/flowchart-vue
     </div>
 </template>
 <script>
-  import FlowChart, {
+  import Flowchart, {
     Nodes, Connections,
     ConnectionDialog, NodeDialog,
   } from '@peterkmoss/flowchart-vue';
@@ -46,7 +46,7 @@ npm i @peterkmoss/flowchart-vue
   export default {
     name: 'App',
     components: {
-      FlowChart,
+      Flowchart,
       ConnectionDialog,
       NodeDialog,
     },
