@@ -31,28 +31,17 @@ import {
   getEdgeOfPoints,
   pointRectangleIntersection,
 } from "../../utils/math";
-import render from "./render";
 
 export default {
   name: "flowchart",
   props: {
     nodes: {
       type: Array,
-      default: () => [
-        { id: 1, x: 140, y: 270, name: "Start", type: "start" },
-        { id: 2, x: 540, y: 270, name: "End", type: "end" },
-      ],
+      default: () => [],
     },
     connections: {
       type: Array,
-      default: () => [
-        {
-          source: { id: 1, position: "right" },
-          destination: { id: 2, position: "left" },
-          id: 1,
-          type: "pass",
-        },
-      ],
+      default: () => [],
     },
     width: {
       type: [String, Number],
@@ -66,15 +55,9 @@ export default {
       type: Boolean,
       default: false,
     },
-    render: {
-      type: Function,
-      default: render,
-    },
   },
   data() {
     return {
-      internalNodes: [],
-      internalConnections: [],
       connectingInfo: {
         source: null,
         sourcePosition: null,
@@ -89,18 +72,21 @@ export default {
       clickedOnce: false,
       pathClickedOnce: false,
       /**
-       * lines of all internalConnections
+       * lines of all connections
        */
       lines: [],
     };
   },
   methods: {
+    /**
+      * @param { Node } node
+      */
     add(node) {
       if (this.readonly) {
         return;
       }
-      this.internalNodes.push(node);
-      this.$emit("add", node, this.internalNodes, this.internalConnections);
+      this.nodes.push(node);
+      this.$emit("add", node, this.nodes, this.connections);
     },
     editCurrent() {
       if (this.currentNodes.length === 1) {
@@ -109,12 +95,18 @@ export default {
         this.editConnection(this.currentConnections[0]);
       }
     },
+    /**
+      * @param { Node } node
+      */
     editNode(node) {
       if (this.readonly) {
         return;
       }
       this.$emit("editnode", node);
     },
+    /**
+      * @param { Connection } connection
+      */
     editConnection(connection) {
       if (this.readonly) {
         return;
@@ -153,8 +145,8 @@ export default {
               type: "pass",
               name: "Pass",
             };
-            this.internalConnections.push(conn);
-            this.$emit("connect", conn, this.internalNodes, this.internalConnections);
+            this.connections.push(conn);
+            this.$emit("connect", conn, this.nodes, this.connections);
           }
         }
         this.connectingInfo.source = null;
@@ -209,10 +201,10 @@ export default {
     getConnectorPosition(node) {
       const halfWidth = node.width / 2;
       const halfHeight = node.height / 2;
-      let top = { x: node.x + halfWidth, y: node.y };
-      let left = { x: node.x, y: node.y + halfHeight };
-      let bottom = { x: node.x + halfWidth, y: node.y + node.height };
-      let right = { x: node.x + node.width, y: node.y + halfHeight };
+      const top = { x: node.x + halfWidth, y: node.y };
+      const left = { x: node.x, y: node.y + halfHeight };
+      const bottom = { x: node.x + halfWidth, y: node.y + node.height };
+      const right = { x: node.x + node.width, y: node.y + halfHeight };
       return { left, right, top, bottom };
     },
     renderSelection() {
@@ -233,7 +225,7 @@ export default {
           .attr("width", edge.end.x - edge.start.x)
           .attr("height", edge.end.y - edge.start.y);
 
-        that.internalNodes.forEach((item) => {
+        that.nodes.forEach((item) => {
           let points = [
             { x: item.x, y: item.y },
             { x: item.x, y: item.y + item.height },
@@ -255,7 +247,7 @@ export default {
             points.every((point) => pointRectangleIntersection(point, edge)) &&
             that.currentConnections.every((item) => item.id !== line.id)
           ) {
-            let connection = that.internalConnections.filter(
+            let connection = that.connections.filter(
               (conn) => conn.id === line.id
             )[0];
             that.currentConnections.push(connection);
@@ -272,7 +264,7 @@ export default {
           d3.selectAll("#svg > g.connection").remove();
           // render lines
           that.lines = [];
-          that.internalConnections.forEach((conn) => {
+          that.connections.forEach((conn) => {
             let sourcePosition = that.getNodeConnectorOffset(
               conn.source.id,
               conn.source.position
@@ -336,24 +328,17 @@ export default {
         });
       });
     },
-    renderNodes() {
-      let that = this;
-      return new Promise(function (resolve) {
-        d3.selectAll("#svg > g.node").remove();
-
-        // render nodes
-        that.internalNodes.forEach((node) => {
-          that.renderNode(
-            node,
-            that.currentNodes.filter((item) => item === node).length > 0
-          );
-        });
-
-        resolve();
-      });
+    async renderNodes() {
+      d3.selectAll("#svg > g.node").remove();
+      this.nodes.forEach(node => {
+        this.renderNode(
+          node,
+          this.currentNodes.filter((item) => item === node).length > 0
+        )
+      })
     },
     getNodeConnectorOffset(nodeId, connectorPosition) {
-      let node = this.internalNodes.filter((item) => item.id === nodeId)[0];
+      let node = this.nodes.filter((item) => item.id === nodeId)[0];
       return this.getConnectorPosition(node)[connectorPosition];
     },
     append(element) {
@@ -398,8 +383,9 @@ export default {
       let that = this;
       let g = that.append("g").attr("cursor", "move").classed("node", true);
 
-      node.render = that.render;
-      node.render(g, node, isSelected);
+      if (node.render) {
+        node.render(g, isSelected);
+      }
 
       let drag = d3
         .drag()
@@ -447,7 +433,7 @@ export default {
           let edge = that.getCurrentNodesEdge();
           let expectX = Math.round(Math.round(edge.start.x) / 10) * 10;
           let expectY = Math.round(Math.round(edge.start.y) / 10) * 10;
-          that.internalNodes.forEach((item) => {
+          that.nodes.forEach((item) => {
             if (
               that.currentNodes.filter((currentNode) => currentNode === item)
                 .length === 0
@@ -551,8 +537,8 @@ export default {
                   type: "pass",
                   name: "Pass",
                 };
-                that.internalConnections.push(conn);
-                that.$emit("connect", conn, that.internalNodes, that.internalConnections);
+                that.connections.push(conn);
+                that.$emit("connect", conn, that.nodes, that.connections);
               }
               that.connectingInfo.source = null;
               that.connectingInfo.sourcePosition = null;
@@ -589,7 +575,7 @@ export default {
       if (this.readonly) {
         return;
       }
-      this.$emit("save", this.internalNodes, this.internalConnections);
+      this.$emit("save", this.nodes, this.connections);
     },
     async remove() {
       if (this.readonly) {
@@ -609,26 +595,26 @@ export default {
       }
     },
     removeNode(node) {
-      let connections = this.internalConnections.filter(
+      const connections = this.connections.filter(
         (item) => item.source.id === node.id || item.destination.id === node.id
       );
-      for (let connection of connections) {
-        this.internalConnections.splice(
-          this.internalConnections.indexOf(connection),
+      for (const connection of connections) {
+        this.connections.splice(
+          this.connections.indexOf(connection),
           1
         );
       }
-      this.internalNodes.splice(this.internalNodes.indexOf(node), 1);
-      this.$emit("delete", node, this.internalNodes, this.internalConnections);
+      this.nodes.splice(this.nodes.indexOf(node), 1);
+      this.$emit("delete", node, this.nodes, this.connections);
     },
     removeConnection(conn) {
-      let index = this.internalConnections.indexOf(conn);
-      this.internalConnections.splice(index, 1);
-      this.$emit("disconnect", conn, this.internalNodes, this.internalConnections);
+      const index = this.connections.indexOf(conn);
+      this.connections.splice(index, 1);
+      this.$emit("disconnect", conn, this.nodes, this.connections);
     },
     moveCurrentNode(x, y) {
       if (this.currentNodes.length > 0 && !this.readonly) {
-        for (let node of this.currentNodes) {
+        for (const node of this.currentNodes) {
           if (node.x + x < 0) {
             x = -node.x;
           }
@@ -640,53 +626,37 @@ export default {
         }
       }
     },
-    init() {
-      let that = this;
-      that.internalNodes.splice(0, that.internalNodes.length);
-      that.internalConnections.splice(0, that.internalConnections.length);
-      that.nodes.forEach((node) => {
-        let newNode = Object.assign({}, node);
-        newNode.width = newNode.width || 120;
-        newNode.height = newNode.height || 60;
-        that.internalNodes.push(newNode);
-      });
-      that.connections.forEach((connection) => {
-        that.internalConnections.push(JSON.parse(JSON.stringify(connection)));
-      });
-    },
   },
   mounted() {
-    let that = this;
-    that.init();
-    document.onkeydown = function (event) {
+    document.onkeydown = (event) => {
       switch (event.keyCode) {
         case 37:
-          that.moveCurrentNode(-10, 0);
+          this.moveCurrentNode(-10, 0);
           break;
         case 38:
-          that.moveCurrentNode(0, -10);
+          this.moveCurrentNode(0, -10);
           break;
         case 39:
-          that.moveCurrentNode(10, 0);
+          this.moveCurrentNode(10, 0);
           break;
         case 40:
-          that.moveCurrentNode(0, 10);
+          this.moveCurrentNode(0, 10);
           break;
         case 27:
-          that.currentNodes.splice(0, that.currentNodes.length);
-          that.currentConnections.splice(0, that.currentConnections.length);
+          this.currentNodes.splice(0, this.currentNodes.length);
+          this.currentConnections.splice(0, this.currentConnections.length);
           break;
         case 65:
           if (document.activeElement === document.getElementById("chart")) {
-            that.currentNodes.splice(0, that.currentNodes.length);
-            that.currentConnections.splice(0, that.currentConnections.length);
-            that.currentNodes.push(...that.internalNodes);
-            that.currentConnections.push(...that.internalConnections);
+            this.currentNodes.splice(0, this.currentNodes.length);
+            this.currentConnections.splice(0, this.currentConnections.length);
+            this.currentNodes.push(...this.nodes);
+            this.currentConnections.push(...this.connections);
             event.preventDefault();
           }
           break;
         case 46:
-          that.remove();
+          this.remove();
           break;
         default:
           break;
@@ -696,7 +666,7 @@ export default {
   created() {},
   computed: {
     hoveredConnector() {
-      for (const node of this.internalNodes) {
+      for (const node of this.nodes) {
         let connectorPosition = this.getConnectorPosition(node);
         for (let prop in connectorPosition) {
           let entry = connectorPosition[prop];
@@ -735,7 +705,7 @@ export default {
             this.cursorToChartOffset.y
           )
         ) {
-          let connections = this.internalConnections.filter(
+          let connections = this.connections.filter(
             (item) => item.id === line.id
           );
           return connections.length > 0 ? connections[0] : null;
@@ -754,21 +724,6 @@ export default {
     },
   },
   watch: {
-    internalNodes: {
-      immediate: true,
-      deep: true,
-      handler() {
-        this.renderNodes();
-        this.renderConnections();
-      },
-    },
-    internalConnections: {
-      immediate: true,
-      deep: true,
-      handler() {
-        this.renderConnections();
-      },
-    },
     selectionInfo: {
       immediate: true,
       deep: true,
@@ -812,14 +767,15 @@ export default {
       immediate: true,
       deep: true,
       handler() {
-        this.init();
+        this.renderNodes();
+        this.renderConnections();
       },
     },
     connections: {
       immediate: true,
       deep: true,
       handler() {
-        this.init();
+        this.renderConnections();
       },
     },
   },
