@@ -78,9 +78,7 @@ export default {
     };
   },
   methods: {
-    /**
-      * @param { Node } node
-      */
+
     add(node) {
       if (this.readonly) {
         return;
@@ -88,6 +86,7 @@ export default {
       this.nodes.push(node);
       this.$emit("add", node, this.nodes, this.connections);
     },
+
     editCurrent() {
       if (this.currentNodes.length === 1) {
         this.editNode(this.currentNodes[0]);
@@ -95,24 +94,21 @@ export default {
         this.editConnection(this.currentConnections[0]);
       }
     },
-    /**
-      * @param { Node } node
-      */
+
     editNode(node) {
       if (this.readonly) {
         return;
       }
       this.$emit("editnode", node);
     },
-    /**
-      * @param { Connection } connection
-      */
+
     editConnection(connection) {
       if (this.readonly) {
         return;
       }
       this.$emit("editconnection", connection);
     },
+
     handleChartMouseWheel(event) {
       event.stopPropagation();
       event.preventDefault();
@@ -126,6 +122,7 @@ export default {
         svg.style.zoom = zoom;
       }
     },
+
     async handleChartMouseUp() {
       if (this.connectingInfo.source) {
         if (this.hoveredConnector) {
@@ -156,6 +153,7 @@ export default {
         this.selectionInfo = null;
       }
     },
+
     async handleChartMouseMove(event) {
       // calc offset of cursor to chart
       let boundingClientRect = event.currentTarget.getBoundingClientRect();
@@ -186,18 +184,21 @@ export default {
         );
       }
     },
+    
     handleChartDblClick(event) {
       if (this.readonly) {
         return;
       }
       this.$emit("dblclick", { x: event.offsetX, y: event.offsetY });
     },
+
     handleChartMouseDown(event) {
       if (event.ctrlKey) {
         return;
       }
       this.selectionInfo = { x: event.offsetX, y: event.offsetY };
     },
+
     getConnectorPosition(node) {
       const halfWidth = node.width / 2;
       const halfHeight = node.height / 2;
@@ -207,6 +208,7 @@ export default {
       const right = { x: node.x + node.width, y: node.y + halfHeight };
       return { left, right, top, bottom };
     },
+
     renderSelection() {
       let that = this;
       // render selection rectangle
@@ -257,6 +259,7 @@ export default {
         d3.selectAll("#svg > .selection").classed("active", false);
       }
     },
+
     renderConnections() {
       let that = this;
       return new Promise(function (resolve) {
@@ -328,6 +331,7 @@ export default {
         });
       });
     },
+
     async renderNodes() {
       d3.selectAll("#svg > g.node").remove();
       this.nodes.forEach(node => {
@@ -337,19 +341,23 @@ export default {
         )
       })
     },
+
     getNodeConnectorOffset(nodeId, connectorPosition) {
       let node = this.nodes.filter((item) => item.id === nodeId)[0];
       return this.getConnectorPosition(node)[connectorPosition];
     },
+
     append(element) {
       let svg = d3.select("#svg");
       return svg.insert(element, ".selection");
     },
+
     guideLineTo(x1, y1, x2, y2) {
       let g = this.append("g");
       g.classed("guideline", true);
       lineTo(g, x1, y1, x2, y2, 1, "#a3a3a3", [5, 3]);
     },
+
     arrowTo(x1, y1, x2, y2, startPosition, endPosition, color) {
       let g = this.append("g");
       g.classed("connection", true);
@@ -379,6 +387,7 @@ export default {
         false
       );
     },
+
     renderNode(node, isSelected) {
       let that = this;
       let g = that.append("g").attr("cursor", "move").classed("node", true);
@@ -558,6 +567,7 @@ export default {
         connectors.forEach((conn) => conn.classed("active", false));
       });
     },
+
     getCurrentNodesEdge() {
       let points = this.currentNodes.map((node) => ({
         x: node.x,
@@ -571,12 +581,14 @@ export default {
       );
       return getEdgeOfPoints(points);
     },
+
     save() {
       if (this.readonly) {
         return;
       }
       this.$emit("save", this.nodes, this.connections);
     },
+
     async remove() {
       if (this.readonly) {
         return;
@@ -594,6 +606,7 @@ export default {
         this.currentNodes.splice(0, this.currentNodes.length);
       }
     },
+
     removeNode(node) {
       const connections = this.connections.filter(
         (item) => item.source.id === node.id || item.destination.id === node.id
@@ -607,11 +620,13 @@ export default {
       this.nodes.splice(this.nodes.indexOf(node), 1);
       this.$emit("delete", node, this.nodes, this.connections);
     },
+
     removeConnection(conn) {
       const index = this.connections.indexOf(conn);
       this.connections.splice(index, 1);
       this.$emit("disconnect", conn, this.nodes, this.connections);
     },
+
     moveCurrentNode(x, y) {
       if (this.currentNodes.length > 0 && !this.readonly) {
         for (const node of this.currentNodes) {
@@ -628,6 +643,8 @@ export default {
     },
   },
   mounted() {
+    this.renderNodes()
+    this.renderConnections()
     document.onkeydown = (event) => {
       switch (event.keyCode) {
         case 37:
