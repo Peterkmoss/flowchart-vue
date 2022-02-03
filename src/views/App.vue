@@ -6,16 +6,7 @@
     </h5>
     <div id="toolbar">
       <button
-        @click="
-          $refs.chart.add({
-            id: +new Date(),
-            x: 10,
-            y: 10,
-            name: 'New',
-            type: 'operation',
-            approvers: [],
-          })
-        "
+        @click="add(100, 200)"
       >
         Add(Double-click canvas)
       </button>

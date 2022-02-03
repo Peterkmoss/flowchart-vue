@@ -5,20 +5,13 @@
                 <span>Edit</span>
             </div>
             <div class="body">
-                <label for="name">Name</label>
-                <input class="form-control" id="name" v-model="nodeForm.name"/>
+                <label for="name">Text</label>
+                <input class="form-control" id="text" v-model="nodeForm.name"/>
                 <label for="type">Type</label>
                 <select class="form-control" id="type" v-model="nodeForm.type">
                     <option :key="'node-type-' + item.id" :value="item.id"
                             v-for="item in [ { name: 'Start', id: 'start' }, { name: 'End', id: 'end' }, { name: 'Operation', id: 'operation' } ]"
                     >
-                        {{item.name}}
-                    </option>
-                </select>
-                <label for="approver">Approver</label>
-                <select class="form-control" id="approver" :value="nodeForm.approver.id"
-                        @change="handleChangeApprover($event)">
-                    <option :value="item.id" :key="'approver-' + item.id" v-for="item in approvers">
                         {{item.name}}
                     </option>
                 </select>
@@ -46,8 +39,7 @@
     },
     data: function() {
       return {
-        nodeForm: {name: null, id: null, type: null, approver: []},
-        approvers: [{id: 1, name: 'Joyce'}, {id: 2, name: 'Allen'}, {id: 3, name: 'Teresa'}],
+        nodeForm: {name: null, id: null},
       };
     },
     methods: {
