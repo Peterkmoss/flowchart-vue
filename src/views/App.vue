@@ -5,15 +5,12 @@
       Flowchart & Flowchart designer component for Vue.js.
     </h5>
     <div id="toolbar">
-      <button
-        @click="add(100, 200)"
-      >
-        Add(Double-click canvas)
-      </button>
+      <button @click="addStart">Add Start</button>
+      <button @click="addEnd">Add End</button>
+      <button @click="addOperation">Add Operation</button>
+      <button @click="addDecision">Add Decision</button>
       <button @click="$refs.chart.remove()">Delete(Del)</button>
-      <button @click="$refs.chart.editCurrent()">
-        Edit(Double-click node)
-      </button>
+      <button @click="$refs.chart.editCurrent()"> Edit(Double-click node)</button>
       <button @click="$refs.chart.save()">Save</button>
     </div>
     <flowchart
@@ -34,13 +31,12 @@
     <node-dialog
       :visible.sync="nodeDialogVisible"
       :node.sync="nodeForm.target"
-    ></node-dialog>
+    />
     <connection-dialog
       :visible.sync="connectionDialogVisible"
       :connection.sync="connectionForm.target"
       :operation="connectionForm.operation"
-    >
-    </connection-dialog>
+    />
   </div>
 </template>
 <script>
@@ -81,8 +77,20 @@ export default {
   },
   async mounted() {},
   methods: {
-    add(x, y) {
-      this.$refs.chart.add(new OperationNode(+new Date(), x, y, "New"))
+    addEnd() {
+      this.add(100, 100, EndNode);
+    },
+    addStart() {
+      this.add(100, 100, StartNode);
+    },
+    addDecision() {
+      this.add(100, 100, DesicionNode);
+    },
+    addOperation() {
+      this.add(100, 100, OperationNode);
+    },
+    add(x, y, cls) {
+      this.$refs.chart.add(new cls(+new Date(), x, y, "New"))
     },
     handleDblClick(position) {
       /* this.add(position.x, position.y) */

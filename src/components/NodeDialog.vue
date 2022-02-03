@@ -5,16 +5,8 @@
                 <span>Edit</span>
             </div>
             <div class="body">
-                <label for="name">Text</label>
-                <input class="form-control" id="text" v-model="nodeForm.name"/>
-                <label for="type">Type</label>
-                <select class="form-control" id="type" v-model="nodeForm.type">
-                    <option :key="'node-type-' + item.id" :value="item.id"
-                            v-for="item in [ { name: 'Start', id: 'start' }, { name: 'End', id: 'end' }, { name: 'Operation', id: 'operation' } ]"
-                    >
-                        {{item.name}}
-                    </option>
-                </select>
+              <label for="name">Text</label>
+              <input class="form-control" id="text" v-model="nodeForm.name"/>
             </div>
             <div class="footer">
                 <button @click="handleClickCancelSaveNode">Cancel</button>

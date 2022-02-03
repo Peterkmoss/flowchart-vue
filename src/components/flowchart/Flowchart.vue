@@ -13,9 +13,6 @@
     @mousewheel="handleChartMouseWheel"
     @mousedown="handleChartMouseDown($event)"
   >
-    <span id="position" class="unselectable">
-      {{ cursorToChartOffset.x + ", " + cursorToChartOffset.y }}
-    </span>
     <svg id="svg">
       <rect class="selection" height="0" width="0"></rect>
     </svg>
@@ -25,6 +22,7 @@
 <script>
 import { connect, lineTo } from "../../utils/svg";
 import * as d3 from "d3";
+import * as handlers from "../../handlers";
 import {
   between,
   distanceOfPointToLine,
@@ -212,14 +210,12 @@ export default {
     },
 
     renderSelection() {
-      let that = this;
-      // render selection rectangle
-      if (that.selectionInfo) {
-        that.currentNodes.splice(0, that.currentNodes.length);
-        that.currentConnections.splice(0, that.currentConnections.length);
+      if (this.selectionInfo) {
+        this.currentNodes.splice(0, this.currentNodes.length);
+        this.currentConnections.splice(0, this.currentConnections.length);
         let edge = getEdgeOfPoints([
-          { x: that.selectionInfo.x, y: that.selectionInfo.y },
-          { x: that.cursorToChartOffset.x, y: that.cursorToChartOffset.y },
+          { x: this.selectionInfo.x, y: this.selectionInfo.y },
+          { x: this.cursorToChartOffset.x, y: this.cursorToChartOffset.y },
         ]);
         let svg = d3.select("#svg");
         let rect = svg.select(".selection").classed("active", true);
@@ -229,32 +225,28 @@ export default {
           .attr("width", edge.end.x - edge.start.x)
           .attr("height", edge.end.y - edge.start.y);
 
-        that.nodes.forEach((item) => {
-          let points = [
+        this.nodes.forEach(item => {
+          const points = [
             { x: item.x, y: item.y },
             { x: item.x, y: item.y + item.height },
             { x: item.x + item.width, y: item.y },
             { x: item.x + item.width, y: item.y + item.height },
           ];
-          if (
-            points.every((point) => pointRectangleIntersection(point, edge))
-          ) {
-            that.currentNodes.push(item);
+          if (points.every(point => pointRectangleIntersection(point, edge))) {
+            this.currentNodes.push(item);
           }
         });
-        that.lines.forEach((line) => {
-          let points = [
+        this.lines.forEach(line => {
+          const points = [
             { x: line.sourceX, y: line.sourceY },
             { x: line.destinationX, y: line.destinationY },
           ];
           if (
-            points.every((point) => pointRectangleIntersection(point, edge)) &&
-            that.currentConnections.every((item) => item.id !== line.id)
+            points.every(point => pointRectangleIntersection(point, edge)) &&
+            this.currentConnections.every(item => item.id !== line.id)
           ) {
-            let connection = that.connections.filter(
-              (conn) => conn.id === line.id
-            )[0];
-            that.currentConnections.push(connection);
+            const connection = this.connections.find(conn => conn.id === line.id);
+            this.currentConnections.push(connection);
           }
         });
       } else {
@@ -262,19 +254,17 @@ export default {
       }
     },
 
-    renderConnections() {
-      let that = this;
-      return new Promise(function (resolve) {
-        that.$nextTick(function () {
+    async renderConnections() {
+        this.$nextTick(() => {
           d3.selectAll("#svg > g.connection").remove();
           // render lines
-          that.lines = [];
-          that.connections.forEach((conn) => {
-            let sourcePosition = that.getNodeConnectorOffset(
+          this.lines = [];
+          this.connections.forEach((conn) => {
+            let sourcePosition = this.getNodeConnectorOffset(
               conn.source.id,
               conn.source.position
             );
-            let destinationPosition = that.getNodeConnectorOffset(
+            let destinationPosition = this.getNodeConnectorOffset(
               conn.destination.id,
               conn.destination.position
             );
@@ -283,14 +273,14 @@ export default {
               reject: "red",
             };
             if (
-              that.currentConnections.filter((item) => item === conn).length > 0
+              this.currentConnections.filter(item => item === conn).length > 0
             ) {
               colors = {
                 pass: "#12640a",
                 reject: "darkred",
               };
             }
-            let result = that.arrowTo(
+            let result = this.arrowTo(
               sourcePosition.x,
               sourcePosition.y,
               destinationPosition.x,
@@ -300,27 +290,27 @@ export default {
               colors[conn.type]
             );
             for (const path of result.paths) {
-              path.on("mousedown", function () {
+              path.on("mousedown", () => {
                 d3.event.stopPropagation();
-                if (that.pathClickedOnce) {
-                  that.editConnection(conn);
+                if (this.pathClickedOnce) {
+                  this.editConnection(conn);
                 } else {
                   let timer = setTimeout(function () {
-                    that.pathClickedOnce = false;
+                    this.pathClickedOnce = false;
                     clearTimeout(timer);
                   }, 300);
-                  that.pathClickedOnce = true;
+                  this.pathClickedOnce = true;
                 }
-                that.currentNodes.splice(0, that.currentNodes.length);
-                that.currentConnections.splice(
+                this.currentNodes.splice(0, this.currentNodes.length);
+                this.currentConnections.splice(
                   0,
-                  that.currentConnections.length
+                  this.currentConnections.length
                 );
-                that.currentConnections.push(conn);
+                this.currentConnections.push(conn);
               });
             }
             for (const line of result.lines) {
-              that.lines.push({
+              this.lines.push({
                 sourceX: line.sourceX,
                 sourceY: line.sourceY,
                 destinationX: line.destinationX,
@@ -329,9 +319,7 @@ export default {
               });
             }
           });
-          resolve();
         });
-      });
     },
 
     async renderNodes() {
@@ -339,7 +327,7 @@ export default {
       this.nodes.forEach(node => {
         this.renderNode(
           node,
-          this.currentNodes.filter((item) => item === node).length > 0
+          this.currentNodes.filter(item => item === node).length > 0
         )
       })
     },
@@ -375,7 +363,7 @@ export default {
         color || "#a3a3a3",
         true
       );
-      // a 5px cover to make mouse operation conveniently
+      // a 10px cover to make mouse operation conveniently
       return connect(
         g,
         x1,
@@ -384,161 +372,66 @@ export default {
         y2,
         startPosition,
         endPosition,
-        5,
+        10,
         "transparent",
         false
       );
     },
 
     renderNode(node, isSelected) {
-      let that = this;
-      let g = that.append("g").attr("cursor", "move").classed("node", true);
+      let g = this.append("g").attr("cursor", "move").classed("node", true);
 
       if (node.render) {
         node.render(g, isSelected);
       }
 
-      let drag = d3
-        .drag()
-        .on("start", function () {
-          // handle mousedown
-          let isNotCurrentNode =
-            that.currentNodes.filter((item) => item === node).length === 0;
-          if (isNotCurrentNode) {
-            that.currentConnections.splice(0, that.currentConnections.length);
-            that.currentNodes.splice(0, that.currentNodes.length);
-            that.currentNodes.push(node);
-          }
-
-          if (that.clickedOnce) {
-            that.currentNodes.splice(0, that.currentNodes.length);
-            that.editNode(node);
-          } else {
-            let timer = setTimeout(function () {
-              that.clickedOnce = false;
-              clearTimeout(timer);
-            }, 300);
-            that.clickedOnce = true;
-          }
-        })
-        .on("drag", async function () {
-          if (that.readonly) {
-            return;
-          }
-
-          let zoom = parseFloat(document.getElementById("svg").style.zoom || 1);
-          for (let currentNode of that.currentNodes) {
-            let x = d3.event.dx / zoom;
-            if (currentNode.x + x < 0) {
-              x = -currentNode.x;
-            }
-            currentNode.x += x;
-            let y = d3.event.dy / zoom;
-            if (currentNode.y + y < 0) {
-              y = -currentNode.y;
-            }
-            currentNode.y += y;
-          }
-
-          d3.selectAll("#svg > g.guideline").remove();
-          let edge = that.getCurrentNodesEdge();
-          let expectX = Math.round(Math.round(edge.start.x) / 10) * 10;
-          let expectY = Math.round(Math.round(edge.start.y) / 10) * 10;
-          that.nodes.forEach((item) => {
-            if (
-              that.currentNodes.filter((currentNode) => currentNode === item)
-                .length === 0
-            ) {
-              if (item.x === expectX) {
-                // vertical guideline
-                if (item.y < expectY) {
-                  that.guideLineTo(
-                    item.x,
-                    item.y + item.height,
-                    expectX,
-                    expectY
-                  );
-                } else {
-                  that.guideLineTo(
-                    expectX,
-                    expectY + item.height,
-                    item.x,
-                    item.y
-                  );
-                }
-              }
-              if (item.y === expectY) {
-                // horizontal guideline
-                if (item.x < expectX) {
-                  that.guideLineTo(
-                    item.x + item.width,
-                    item.y,
-                    expectX,
-                    expectY
-                  );
-                } else {
-                  that.guideLineTo(
-                    expectX + item.width,
-                    expectY,
-                    item.x,
-                    item.y
-                  );
-                }
-              }
-            }
-          });
-        })
-        .on("end", function () {
-          d3.selectAll("#svg > g.guideline").remove();
-          for (let currentNode of that.currentNodes) {
-            currentNode.x = Math.round(Math.round(currentNode.x) / 10) * 10;
-            currentNode.y = Math.round(Math.round(currentNode.y) / 10) * 10;
-          }
-        });
+      const drag = d3.drag()
+        .on("start", () => { handlers.dragStart(this, node) })
+        .on("drag", async () => { handlers.dragMove(this, node) })
+        .on("end", () => { handlers.dragEnd(this, node) });
       g.call(drag);
-      g.on("mousedown", function () {
+      g.on("mousedown", () => {
         // handle ctrl+mousedown
         if (!d3.event.ctrlKey) {
           return;
         }
-        let isNotCurrentNode =
-          that.currentNodes.filter((item) => item === node).length === 0;
+        let isNotCurrentNode = !this.currentNodes.find(item => item === node);
         if (isNotCurrentNode) {
-          that.currentNodes.push(node);
+          this.currentNodes.push(node);
         } else {
-          that.currentNodes.splice(that.currentNodes.indexOf(node), 1);
+          this.currentNodes.splice(this.currentNodes.indexOf(node), 1);
         }
       });
 
-      let connectors = [];
-      let connectorPosition = this.getConnectorPosition(node);
-      for (let position in connectorPosition) {
-        let positionElement = connectorPosition[position];
-        let connector = g
+      const connectors = [];
+      const connectorPosition = this.getConnectorPosition(node);
+      for (const position in connectorPosition) {
+        const positionElement = connectorPosition[position];
+        const connector = g
           .append("circle")
           .attr("cx", positionElement.x)
           .attr("cy", positionElement.y)
           .attr("r", 4)
           .attr("class", "connector");
         connector
-          .on("mousedown", function () {
+          .on("mousedown", () => {
             d3.event.stopPropagation();
-            if (node.type === "end" || that.readonly) {
+            if (node.type === "end" || this.readonly) {
               return;
             }
-            that.connectingInfo.source = node;
-            that.connectingInfo.sourcePosition = position;
+            this.connectingInfo.source = node;
+            this.connectingInfo.sourcePosition = position;
           })
           .on("mouseup", function () {
             d3.event.stopPropagation();
-            if (that.connectingInfo.source) {
-              if (that.connectingInfo.source.id !== node.id) {
+            if (this.connectingInfo.source) {
+              if (this.connectingInfo.source.id !== node.id) {
                 // Node can't connect to itself
                 let tempId = +new Date();
                 let conn = {
                   source: {
-                    id: that.connectingInfo.source.id,
-                    position: that.connectingInfo.sourcePosition,
+                    id: this.connectingInfo.source.id,
+                    position: this.connectingInfo.sourcePosition,
                   },
                   destination: {
                     id: node.id,
@@ -548,11 +441,11 @@ export default {
                   type: "pass",
                   name: "Pass",
                 };
-                that.connections.push(conn);
-                that.$emit("connect", conn, that.nodes, that.connections);
+                this.connections.push(conn);
+                this.$emit("connect", conn, this.nodes, this.connections);
               }
-              that.connectingInfo.source = null;
-              that.connectingInfo.sourcePosition = null;
+              this.connectingInfo.source = null;
+              this.connectingInfo.sourcePosition = null;
             }
           })
           .on("mouseover", function () {

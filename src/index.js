@@ -1,7 +1,13 @@
-import Flowchart from './components/flowchart/Flowchart';
+import Flowchart from './components/flowchart';
+import NodeDialog from './components/NodeDialog';
+import ConnectionDialog from './components/ConnectionDialog';
+import * as Nodes from './components/Node';
+import * as Connections from './components/Connection';
 
 const components = [
   Flowchart,
+  NodeDialog,
+  ConnectionDialog,
 ];
 
 const install = function(Vue) {
@@ -18,3 +24,10 @@ export default {
   install,
   Flowchart,
 };
+
+export {
+  NodeDialog,
+  ConnectionDialog,
+  Nodes,
+  Connections,
+}

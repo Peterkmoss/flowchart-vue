@@ -1,89 +1,102 @@
 # Flowchart
 
-Flowchart & Flowchart designer component for Vue.js([flowchart-react](https://github.com/joyceworks/flowchart-react) for React.js).
-
-[![NPM](https://img.shields.io/npm/v/flowchart-vue.svg)](https://www.npmjs.com/package/flowchart-vue)
-
-English | [中文](https://github.com/joyceworks/flowchart-vue/blob/master/README-zh_CN.md)
+Flowchart & Flowchart designer component for Vue.js.
 
 ## Usage
 
 ```shell script
-yarn add flowchart-vue
+npm i @peterkmoss/flowchart-vue
 ```
 
 ```vue
 <template>
     <div id="app">
-        <button type="button" @click="$refs.chart.add({id: +new Date(), x: 10, y: 10, name: 'New', type: 'operation', approvers: []})">
-            Add
-        </button>
-        <button type="button" @click="$refs.chart.remove()">
-            Del
-        </button>
-        <button type="button" @click="$refs.chart.editCurrent()">
-            Edit
-        </button>
-        <button type="button" @click="$refs.chart.save()">
-            Save
-        </button>
-        <flowchart :nodes="nodes" :connections="connections" @editnode="handleEditNode"
-                    @dblclick="handleDblClick" @editconnection="handleEditConnection" 
-                    @save="handleChartSave" ref="chart">
-        </flowchart>
+      <button @click="addStart">Add Start</button>
+      <button @click="addEnd">Add End</button>
+      <button @click="addOperation">Add Operation</button>
+      <button @click="addDecision">Add Decision</button>
+      <button @click="$refs.chart.remove()">Delete(Del)</button>
+      <button @click="$refs.chart.editCurrent()"> Edit(Double-click node)</button>
+      <button @click="$refs.chart.save()">Save</button>
+      <flowchart 
+        :nodes="nodes"
+        :connections="connections" 
+        @editnode="handleEditNode"
+        @editconnection="handleEditConnection" 
+        @save="handleChartSave" 
+        ref="chart"
+      />
+      <node-dialog
+        :visible.sync="nodeDialogVisible"
+        :node.sync="nodeForm.target"
+      />
+      <connection-dialog
+        :visible.sync="connectionDialogVisible"
+        :connection.sync="connectionForm.target"
+        :operation="connectionForm.operation"
+      />
     </div>
 </template>
 <script>
-  import Vue from 'vue';
-  import FlowChart from 'flowchart-vue';
-
-  Vue.use(FlowChart);
+  import FlowChart, {
+    Nodes, Connections,
+    ConnectionDialog, NodeDialog,
+  } from '@peterkmoss/flowchart-vue';
 
   export default {
     name: 'App',
-    data: function() {
+    components: {
+      FlowChart,
+      ConnectionDialog,
+      NodeDialog,
+    },
+    data() {
       return {
         nodes: [
-          // Basic fields
-          {id: 1, x: 140, y: 270, name: 'Start', type: 'start'},
-          // You can add any generic fields to node, for example: description
-          // It will be passed to @save, @editnode
-          {id: 2, x: 540, y: 270, name: 'End', type: 'end', description: 'I'm here'},
+          new Nodes.StartNode(1, 100, 220),
+          new Nodes.OperationNode(2, 250, 220, "Op"),
+          new Nodes.DesicionNode(3, 400, 220, "De"),
+          new Nodes.EndNode(4, 550, 220),
         ],
         connections: [
-          {
-            source: {id: 1, position: 'right'},
-            destination: {id: 2, position: 'left'},
-            id: 1,
-            type: 'pass',
-          },
+          new Connections.ArrowConnection(
+            1, 
+            { id: 1, position: "right" }, 
+            { id: 2, position: "left" }
+          )
         ],
+        nodeForm: { target: null },
+        connectionForm: { target: null, operation: null },
+        nodeDialogVisible: false,
+        connectionDialogVisible: false,
       };
     },
     methods: {
+      addEnd() {
+        this.add(100, 100, Nodes.EndNode);
+      },
+      addStart() {
+        this.add(100, 100, Nodes.StartNode);
+      },
+      addDecision() {
+        this.add(100, 100, Nodes.DesicionNode);
+      },
+      addOperation() {
+        this.add(100, 100, Nodes.OperationNode);
+      },
+      add(x, y, cls) {
+        this.$refs.chart.add(new cls(+new Date(), x, y, "New"))
+      },
       handleChartSave(nodes, connections) {
-        // axios.post(url, {nodes, connections}).then(resp => {
-        //   this.nodes = resp.data.nodes;
-        //   this.connections = resp.data.connections;
-        //   // Flowchart will refresh after this.nodes and this.connections changed
-        // });
+        // E.g. save to database
       },
       handleEditNode(node) {
-        if (node.id === 2) {
-          console.log(node.description);
-        }
+        this.nodeForm.target = node;
+        this.nodeDialogVisible = true;
       },
       handleEditConnection(connection) {
-      },
-      handleDblClick(position) {
-        this.$refs.chart.add({
-          id: +new Date(),
-          x: position.x,
-          y: position.y,
-          name: 'New',
-          type: 'operation',
-          approvers: [],
-        });
+        this.connectionForm.target = connection;
+        this.connectionDialogVisible = true;
       },
     }
   };
