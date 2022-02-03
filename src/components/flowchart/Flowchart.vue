@@ -32,6 +32,8 @@ import {
   pointRectangleIntersection,
 } from "../../utils/math";
 
+/* eslint-disable */
+
 export default {
   name: "flowchart",
   props: {
