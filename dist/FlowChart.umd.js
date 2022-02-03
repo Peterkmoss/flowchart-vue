@@ -6125,8 +6125,8 @@ if (typeof window !== 'undefined') {
 // EXTERNAL MODULE: ./node_modules/core-js/modules/es6.function.name.js
 var es6_function_name = __webpack_require__("7f7f");
 
-// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"194b9414-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/components/flowchart/Flowchart.vue?vue&type=template&id=50f99bb6&
-var Flowchartvue_type_template_id_50f99bb6_render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{style:({
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"194b9414-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--0-0!./node_modules/vue-loader/lib??vue-loader-options!./src/components/flowchart/Flowchart.vue?vue&type=template&id=091a97dd&
+var Flowchartvue_type_template_id_091a97dd_render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{style:({
     width: isNaN(_vm.width) ? _vm.width : _vm.width + 'px',
     height: isNaN(_vm.height) ? _vm.height : _vm.height + 'px',
     cursor: _vm.cursor,
@@ -6134,7 +6134,7 @@ var Flowchartvue_type_template_id_50f99bb6_render = function () {var _vm=this;va
 var staticRenderFns = []
 
 
-// CONCATENATED MODULE: ./src/components/flowchart/Flowchart.vue?vue&type=template&id=50f99bb6&
+// CONCATENATED MODULE: ./src/components/flowchart/Flowchart.vue?vue&type=template&id=091a97dd&
 
 // EXTERNAL MODULE: ./node_modules/@babel/runtime-corejs2/core-js/symbol/iterator.js
 var iterator = __webpack_require__("5d58");
@@ -19543,7 +19543,7 @@ var handlers_dragEnd = function dragEnd(_this) {
                             _this2.editConnection(conn);
                           } else {
                             var timer = setTimeout(function () {
-                              this.pathClickedOnce = false;
+                              _this2.pathClickedOnce = false;
                               clearTimeout(timer);
                             }, 300);
                             _this2.pathClickedOnce = true;
@@ -19669,7 +19669,7 @@ var handlers_dragEnd = function dragEnd(_this) {
       g.classed("connection", true);
       connect(g, x1, y1, x2, y2, startPosition, endPosition, 1, color || "#a3a3a3", true); // a 10px cover to make mouse operation conveniently
 
-      return connect(g, x1, y1, x2, y2, startPosition, endPosition, 10, "transparent", false);
+      return connect(g, x1, y1, x2, y2, startPosition, endPosition, 5, "transparent", false);
     },
     renderNode: function renderNode(node, isSelected) {
       var _this4 = this;
@@ -19737,14 +19737,14 @@ var handlers_dragEnd = function dragEnd(_this) {
         }).on("mouseup", function () {
           on_event.stopPropagation();
 
-          if (this.connectingInfo.source) {
-            if (this.connectingInfo.source.id !== node.id) {
+          if (_this4.connectingInfo.source) {
+            if (_this4.connectingInfo.source.id !== node.id) {
               // Node can't connect to itself
               var tempId = +new Date();
               var conn = {
                 source: {
-                  id: this.connectingInfo.source.id,
-                  position: this.connectingInfo.sourcePosition
+                  id: _this4.connectingInfo.source.id,
+                  position: _this4.connectingInfo.sourcePosition
                 },
                 destination: {
                   id: node.id,
@@ -19754,12 +19754,14 @@ var handlers_dragEnd = function dragEnd(_this) {
                 type: "pass",
                 name: "Pass"
               };
-              this.connections.push(conn);
-              this.$emit("connect", conn, this.nodes, this.connections);
+
+              _this4.connections.push(conn);
+
+              _this4.$emit("connect", conn, _this4.nodes, _this4.connections);
             }
 
-            this.connectingInfo.source = null;
-            this.connectingInfo.sourcePosition = null;
+            _this4.connectingInfo.source = null;
+            _this4.connectingInfo.sourcePosition = null;
           }
         }).on("mouseover", function () {
           connector.classed("active", true);
@@ -20342,7 +20344,7 @@ function normalizeComponent (
 
 var component = normalizeComponent(
   flowchart_Flowchartvue_type_script_lang_js_,
-  Flowchartvue_type_template_id_50f99bb6_render,
+  Flowchartvue_type_template_id_091a97dd_render,
   staticRenderFns,
   false,
   null,
