@@ -1,15 +1,16 @@
 {
-  "name": "flowchart-vue",
-  "version": "0.19.2",
+  "name": "@peterkmoss/flowchart-vue",
+  "version": "0.20.0",
   "license": "MIT",
   "main": "dist/FlowChart.umd.min.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/joyceworks/flowchart-vue.git"
+    "url": "git+https://github.com/Peterkmoss/flowchart-vue.git"
   },
   "keywords": [
     "flowchart",
-    "flowchart designer"
+    "flowchart designer",
+    "flowchart editor"
   ],
   "private": false,
   "scripts": {
