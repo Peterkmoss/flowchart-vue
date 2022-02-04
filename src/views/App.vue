@@ -14,18 +14,14 @@
       <button @click="$refs.chart.save()">Save</button>
     </div>
     <flowchart
+      ref="chart"
       :nodes="nodes"
       :connections="connections"
       @editnode="handleEditNode"
+      @editconnection="handleEditConnection"
       :width="'100%'"
       :height="500"
       :readonly="false"
-      @dblclick="handleDblClick"
-      @editconnection="handleEditConnection"
-      @save="handleChartSave"
-      @select="handleSelect"
-      @selectconnection="handleSelectConnection"
-      ref="chart"
     >
     </flowchart>
     <node-dialog
@@ -40,13 +36,11 @@
   </div>
 </template>
 <script>
-/* eslint-disable no-unused-vars */
-
 import ConnectionDialog from "../components/ConnectionDialog";
 import NodeDialog from "../components/NodeDialog";
 import Flowchart from "../components/flowchart/Flowchart";
-import { StartNode, EndNode, OperationNode, DesicionNode } from "../components/Node";
-import { ArrowConnection } from "../components/Connection";
+import { StartNode, EndNode, OperationNode, DecisionNode } from "../components/Node";
+import { PassConnection } from "../components/Connection";
 
 export default {
   components: {
@@ -59,11 +53,11 @@ export default {
       nodes: [
         new StartNode(1, 100, 220),
         new OperationNode(2, 250, 220, "Op"),
-        new DesicionNode(3, 400, 220, "De"),
+        new DecisionNode(3, 400, 220, "De"),
         new EndNode(4, 550, 220),
       ],
       connections: [
-        new ArrowConnection(
+        new PassConnection(
           1, 
           { id: 1, position: "right" }, 
           { id: 2, position: "left" }
@@ -84,7 +78,7 @@ export default {
       this.add(100, 100, StartNode);
     },
     addDecision() {
-      this.add(100, 100, DesicionNode);
+      this.add(100, 100, DecisionNode);
     },
     addOperation() {
       this.add(100, 100, OperationNode);
@@ -92,12 +86,6 @@ export default {
     add(x, y, cls) {
       this.$refs.chart.add(new cls(+new Date(), x, y, "New"))
     },
-    handleDblClick(position) {
-      /* this.add(position.x, position.y) */
-    },
-    handleSelect(nodes) { },
-    handleSelectConnection(connections) { },
-    async handleChartSave(nodes, connections) { },
     handleEditNode(node) {
       this.nodeForm.target = node;
       this.nodeDialogVisible = true;

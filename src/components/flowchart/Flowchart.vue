@@ -20,7 +20,7 @@
 </template>
 <style src="./index.css"></style>
 <script>
-import { connect, lineTo } from "../../utils/svg";
+import { lineTo } from "../../utils/svg";
 import * as d3 from "d3";
 import * as handlers from "../../handlers";
 import {
@@ -110,93 +110,23 @@ export default {
     },
 
     handleChartMouseWheel(event) {
-      event.stopPropagation();
-      event.preventDefault();
-      if (event.ctrlKey) {
-        let svg = document.getElementById("svg");
-        let zoom = parseFloat(svg.style.zoom || 1);
-        if (event.deltaY > 0 && zoom === 0.1) {
-          return;
-        }
-        zoom -= event.deltaY / 100 / 10;
-        svg.style.zoom = zoom;
-      }
+      handlers.chartMouseWheel(this, event);
     },
 
     async handleChartMouseUp() {
-      if (this.connectingInfo.source) {
-        if (this.hoveredConnector) {
-          if (this.connectingInfo.source.id !== this.hoveredConnector.node.id) {
-            // Node can't connect to itself
-            let tempId = +new Date();
-            let conn = {
-              source: {
-                id: this.connectingInfo.source.id,
-                position: this.connectingInfo.sourcePosition,
-              },
-              destination: {
-                id: this.hoveredConnector.node.id,
-                position: this.hoveredConnector.position,
-              },
-              id: tempId,
-              type: "pass",
-              name: "Pass",
-            };
-            this.connections.push(conn);
-            this.$emit("connect", conn, this.nodes, this.connections);
-          }
-        }
-        this.connectingInfo.source = null;
-        this.connectingInfo.sourcePosition = null;
-      }
-      if (this.selectionInfo) {
-        this.selectionInfo = null;
-      }
+      handlers.chartMouseUp(this);
     },
 
     async handleChartMouseMove(event) {
-      // calc offset of cursor to chart
-      let boundingClientRect = event.currentTarget.getBoundingClientRect();
-      let actualX = event.pageX - boundingClientRect.left - window.scrollX;
-      this.cursorToChartOffset.x = Math.trunc(actualX);
-      let actualY = event.pageY - boundingClientRect.top - window.scrollY;
-      this.cursorToChartOffset.y = Math.trunc(actualY);
-
-      if (this.connectingInfo.source) {
-        await this.renderConnections();
-
-        d3.selectAll("#svg .connector").classed("active", true);
-
-        let sourceOffset = this.getNodeConnectorOffset(
-          this.connectingInfo.source.id,
-          this.connectingInfo.sourcePosition
-        );
-        let destinationPosition = this.hoveredConnector
-          ? this.hoveredConnector.position
-          : null;
-        this.arrowTo(
-          sourceOffset.x,
-          sourceOffset.y,
-          this.cursorToChartOffset.x,
-          this.cursorToChartOffset.y,
-          this.connectingInfo.sourcePosition,
-          destinationPosition
-        );
-      }
+      handlers.chartMouseMove(this, event);
     },
     
-    handleChartDblClick(event) {
-      if (this.readonly) {
-        return;
-      }
-      this.$emit("dblclick", { x: event.offsetX, y: event.offsetY });
+    async handleChartDblClick(event) {
+      handlers.chartDblClick(this, event);
     },
 
-    handleChartMouseDown(event) {
-      if (event.ctrlKey) {
-        return;
-      }
-      this.selectionInfo = { x: event.offsetX, y: event.offsetY };
+    async handleChartMouseDown(event) {
+      handlers.chartMouseDown(this, event);
     },
 
     getConnectorPosition(node) {
@@ -259,37 +189,22 @@ export default {
           d3.selectAll("#svg > g.connection").remove();
           // render lines
           this.lines = [];
-          this.connections.forEach((conn) => {
-            let sourcePosition = this.getNodeConnectorOffset(
-              conn.source.id,
-              conn.source.position
-            );
-            let destinationPosition = this.getNodeConnectorOffset(
-              conn.destination.id,
-              conn.destination.position
-            );
-            let colors = {
-              pass: "#52c41a",
-              reject: "red",
-            };
-            if (
-              this.currentConnections.filter(item => item === conn).length > 0
-            ) {
-              colors = {
-                pass: "#12640a",
-                reject: "darkred",
-              };
+          this.connections.forEach(conn => {
+            const g = this.append("g");
+            const from = {
+              ...this.getNodeConnectorOffset(conn.source.id, conn.source.position),
+              position: conn.source.position,
             }
-            let result = this.arrowTo(
-              sourcePosition.x,
-              sourcePosition.y,
-              destinationPosition.x,
-              destinationPosition.y,
-              conn.source.position,
-              conn.destination.position,
-              colors[conn.type]
-            );
-            for (const path of result.paths) {
+            const to = {
+              ...this.getNodeConnectorOffset(conn.destination.id, conn.destination.position),
+              position: conn.destination.position,
+            }
+
+            const isSelected = !!this.currentConnections.find(item => item === conn)
+
+            const rendered = conn.render(g, from, to, isSelected)
+
+            for (const path of rendered.paths) {
               path.on("mousedown", () => {
                 d3.event.stopPropagation();
                 if (this.pathClickedOnce) {
@@ -309,13 +224,13 @@ export default {
                 this.currentConnections.push(conn);
               });
             }
-            for (const line of result.lines) {
+            for (const line of rendered.lines) {
               this.lines.push({
+                id: conn.id,
                 sourceX: line.sourceX,
                 sourceY: line.sourceY,
                 destinationX: line.destinationX,
                 destinationY: line.destinationY,
-                id: conn.id,
               });
             }
           });
@@ -323,17 +238,16 @@ export default {
     },
 
     async renderNodes() {
+      // clear currently rendered nodes
       d3.selectAll("#svg > g.node").remove();
+
       this.nodes.forEach(node => {
-        this.renderNode(
-          node,
-          this.currentNodes.filter(item => item === node).length > 0
-        )
+        this.renderNode(node, this.currentNodes.find(item => item === node))
       })
     },
 
     getNodeConnectorOffset(nodeId, connectorPosition) {
-      let node = this.nodes.filter((item) => item.id === nodeId)[0];
+      const node = this.nodes.find(node => node.id === nodeId);
       return this.getConnectorPosition(node)[connectorPosition];
     },
 
@@ -345,37 +259,7 @@ export default {
     guideLineTo(x1, y1, x2, y2) {
       let g = this.append("g");
       g.classed("guideline", true);
-      lineTo(g, x1, y1, x2, y2, 1, "#a3a3a3", [5, 3]);
-    },
-
-    arrowTo(x1, y1, x2, y2, startPosition, endPosition, color) {
-      let g = this.append("g");
-      g.classed("connection", true);
-      connect(
-        g,
-        x1,
-        y1,
-        x2,
-        y2,
-        startPosition,
-        endPosition,
-        1,
-        color || "#a3a3a3",
-        true
-      );
-      // a 10px cover to make mouse operation conveniently
-      return connect(
-        g,
-        x1,
-        y1,
-        x2,
-        y2,
-        startPosition,
-        endPosition,
-        5,
-        "transparent",
-        false
-      );
+      lineTo(g, { x: x1, y: y1 }, { x: x2, y: y2 }, 1, "#a3a3a3", [5, 3]);
     },
 
     renderNode(node, isSelected) {

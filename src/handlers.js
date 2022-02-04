@@ -96,3 +96,93 @@ export const dragEnd = (_this) => {
     currentNode.y = Math.round(Math.round(currentNode.y) / 10) * 10;
   }
 }
+
+export const chartMouseDown = async (_this, event) => {
+  if (event.ctrlKey) {
+    return;
+  }
+  _this.selectionInfo = { x: event.offsetX, y: event.offsetY };
+}
+
+export const chartDblClick = async (_this, event) => {
+  if (_this.readonly) {
+    return;
+  }
+  _this.$emit("dblclick", { x: event.offsetX, y: event.offsetY });
+}
+
+export const chartMouseMove = async (_this, event) => {
+  // calc offset of cursor to chart
+  let boundingClientRect = event.currentTarget.getBoundingClientRect();
+  let actualX = event.pageX - boundingClientRect.left - window.scrollX;
+  _this.cursorToChartOffset.x = Math.trunc(actualX);
+  let actualY = event.pageY - boundingClientRect.top - window.scrollY;
+  _this.cursorToChartOffset.y = Math.trunc(actualY);
+
+  if (_this.connectingInfo.source) {
+    await _this.renderConnections();
+
+    d3.selectAll("#svg .connector").classed("active", true);
+
+    let sourceOffset = _this.getNodeConnectorOffset(
+      _this.connectingInfo.source.id,
+      _this.connectingInfo.sourcePosition
+    );
+    let destinationPosition = _this.hoveredConnector
+      ? _this.hoveredConnector.position
+      : null;
+    _this.arrowTo(
+      sourceOffset.x,
+      sourceOffset.y,
+      _this.cursorToChartOffset.x,
+      _this.cursorToChartOffset.y,
+      _this.connectingInfo.sourcePosition,
+      destinationPosition
+    );
+  }
+}
+
+export const chartMouseUp = async (_this) => {
+  if (_this.connectingInfo.source) {
+    if (_this.hoveredConnector) {
+      if (_this.connectingInfo.source.id !== _this.hoveredConnector.node.id) {
+        // Node can't connect to itself
+        let tempId = +new Date();
+        let conn = {
+          source: {
+            id: _this.connectingInfo.source.id,
+            position: _this.connectingInfo.sourcePosition,
+          },
+          destination: {
+            id: _this.hoveredConnector.node.id,
+            position: _this.hoveredConnector.position,
+          },
+          id: tempId,
+          type: "pass",
+          name: "Pass",
+        };
+        _this.connections.push(conn);
+        _this.$emit("connect", conn, _this.nodes, _this.connections);
+      }
+    }
+    _this.connectingInfo.source = null;
+    _this.connectingInfo.sourcePosition = null;
+  }
+  if (_this.selectionInfo) {
+    _this.selectionInfo = null;
+  }
+}
+
+export const chartMouseWheel = async (_this, event) => {
+  event.stopPropagation();
+  event.preventDefault();
+  if (event.ctrlKey) {
+    let svg = document.getElementById("svg");
+    let zoom = parseFloat(svg.style.zoom || 1);
+    if (event.deltaY > 0 && zoom === 0.1) {
+      return;
+    }
+    zoom -= event.deltaY / 100 / 10;
+    svg.style.zoom = zoom;
+  }
+}

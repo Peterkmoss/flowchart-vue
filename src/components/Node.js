@@ -72,7 +72,7 @@ export class OperationNode extends AbstractNode {
   }
 }
 
-export class DesicionNode extends AbstractNode {
+export class DecisionNode extends AbstractNode {
   constructor(id, x, y, name) {
     super(id, x, y);
     this.name = name;
