@@ -39,8 +39,8 @@
 import ConnectionDialog from "../components/ConnectionDialog";
 import NodeDialog from "../components/NodeDialog";
 import Flowchart from "../components/flowchart/Flowchart";
-import { StartNode, EndNode, OperationNode, DecisionNode } from "../components/Node";
-import { PassConnection } from "../components/Connection";
+import { StartNode, EndNode, OperationNode, DecisionNode } from "../utils/Node";
+import { PassConnection, ArrowConnection, RejectConnection } from "../utils/Connection";
 
 export default {
   components: {
@@ -57,11 +57,21 @@ export default {
         new EndNode(4, 550, 220),
       ],
       connections: [
-        new PassConnection(
+        new ArrowConnection(
           1, 
           { id: 1, position: "right" }, 
           { id: 2, position: "left" }
-        )
+        ),
+        new PassConnection(
+          2, 
+          { id: 2, position: "right" }, 
+          { id: 3, position: "top" }
+        ),
+        new RejectConnection(
+          3, 
+          { id: 3, position: "bottom" }, 
+          { id: 4, position: "right" }
+        ),
       ],
       nodeForm: { target: null },
       connectionForm: { target: null, operation: null },

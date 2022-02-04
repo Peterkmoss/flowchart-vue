@@ -9,13 +9,13 @@ import {
   addHorizontalTopLine,
   addVerticalRightLine,
   addHorizontalBottomLine,
-} from './path'
+} from './Line'
 
 export const OFFSET = 20;
 
-function lineTo(g, from, to, lineWidth, strokeStyle, dash) {
-  let lineGenerator = d3.line().x(d => d.x).y(d => d.y);
-  let path = g.append('path').
+export function lineTo(g, from, to, lineWidth, strokeStyle, dash) {
+  const lineGenerator = d3.line().x(d => d.x).y(d => d.y);
+  const path = g.append('path').
       attr('stroke', strokeStyle).
       attr('stroke-width', lineWidth).
       attr('fill', 'none').
@@ -26,7 +26,7 @@ function lineTo(g, from, to, lineWidth, strokeStyle, dash) {
   return path;
 }
 
-function connect(g, from, to, lineWidth, strokeStyle, markered) {
+function connect(g, from, to) {
   if (!to.position) {
     to.position = from.x > to.x ? 'right' : 'left';
   }
@@ -468,34 +468,9 @@ function connect(g, from, to, lineWidth, strokeStyle, markered) {
   points.push(penult);
   points.push(to);
 
-  let lines = [];
-  let paths = [];
-  for (let i = 0; i < points.length; i++) {
-    let source = points[i];
-    let destination = points[i + 1];
-    lines.push({
-      sourceX: source.x,
-      sourceY: source.y,
-      destinationX: destination.x,
-      destinationY: destination.y,
-    });
-    let finish = i === points.length - 2;
-    if (finish && markered) {
-      let path = arrowTo(g, source, destination, lineWidth, strokeStyle);
-      paths.push(path);
-      break;
-    } else {
-      let path = lineTo(g, source, destination, lineWidth, strokeStyle);
-      paths.push(path);
-    }
-    if (finish) {
-      break;
-    }
-  }
-  return {lines, paths};
 }
 
-function arrowTo(g, from, to, lineWidth, strokeStyle) {
+export function arrowTo(g, from, to, lineWidth, strokeStyle) {
   let path = lineTo(g, from, to, lineWidth, strokeStyle);
   const id = 'arrow' + strokeStyle.replace('#', '');
   g.append('marker').
@@ -514,7 +489,7 @@ function arrowTo(g, from, to, lineWidth, strokeStyle) {
   return path;
 }
 
-const getDirection = (from, to) => {
+export const getDirection = (from, to) => {
   // Use approximatelyEquals to fix the problem of css position presicion
   if (to.x < from.x && approximatelyEquals(to.y, from.y)) {
     return 'l';
@@ -541,8 +516,5 @@ const getDirection = (from, to) => {
 }
 
 export {
-  arrowTo,
-  lineTo,
-  getDirection,
   connect,
 };

@@ -33,7 +33,6 @@ import {
 /* eslint-disable */
 
 export default {
-  name: "flowchart",
   props: {
     nodes: {
       type: Array,
@@ -129,16 +128,6 @@ export default {
       handlers.chartMouseDown(this, event);
     },
 
-    getConnectorPosition(node) {
-      const halfWidth = node.width / 2;
-      const halfHeight = node.height / 2;
-      const top = { x: node.x + halfWidth, y: node.y };
-      const left = { x: node.x, y: node.y + halfHeight };
-      const bottom = { x: node.x + halfWidth, y: node.y + node.height };
-      const right = { x: node.x + node.width, y: node.y + halfHeight };
-      return { left, right, top, bottom };
-    },
-
     renderSelection() {
       if (this.selectionInfo) {
         this.currentNodes.splice(0, this.currentNodes.length);
@@ -184,57 +173,44 @@ export default {
       }
     },
 
+    getNodeById(id) {
+      return this.nodes.find(node => node.id === id)
+    },
+
     async renderConnections() {
-        this.$nextTick(() => {
-          d3.selectAll("#svg > g.connection").remove();
-          // render lines
-          this.lines = [];
-          this.connections.forEach(conn => {
-            const g = this.append("g");
-            const from = {
-              ...this.getNodeConnectorOffset(conn.source.id, conn.source.position),
-              position: conn.source.position,
-            }
-            const to = {
-              ...this.getNodeConnectorOffset(conn.destination.id, conn.destination.position),
-              position: conn.destination.position,
-            }
+      // Clear currently rendered connections
+      d3.selectAll("#svg > g.connection").remove();
 
-            const isSelected = !!this.currentConnections.find(item => item === conn)
+      this.lines = [];
+      this.connections.forEach(conn => {
+        // Create SVG element
+        const g = this.append("g");
+        const from = {
+          ...this.getNodeById(conn.source.id).connectorPosition(conn.source.position),
+          position: conn.source.position,
+        }
+        const to = {
+          ...this.getNodeById(conn.destination.id).connectorPosition(conn.destination.position),
+          position: conn.destination.position,
+        }
 
-            const rendered = conn.render(g, from, to, isSelected)
+        const isSelected = !!this.currentConnections.find(item => item === conn)
 
-            for (const path of rendered.paths) {
-              path.on("mousedown", () => {
-                d3.event.stopPropagation();
-                if (this.pathClickedOnce) {
-                  this.editConnection(conn);
-                } else {
-                  let timer = setTimeout(() => {
-                    this.pathClickedOnce = false;
-                    clearTimeout(timer);
-                  }, 300);
-                  this.pathClickedOnce = true;
-                }
-                this.currentNodes.splice(0, this.currentNodes.length);
-                this.currentConnections.splice(
-                  0,
-                  this.currentConnections.length
-                );
-                this.currentConnections.push(conn);
-              });
-            }
-            for (const line of rendered.lines) {
-              this.lines.push({
-                id: conn.id,
-                sourceX: line.sourceX,
-                sourceY: line.sourceY,
-                destinationX: line.destinationX,
-                destinationY: line.destinationY,
-              });
-            }
+        const { paths, lines } = conn.render(g, from, to, isSelected)
+
+        for (const path of paths) {
+          path.on("mousedown", () => {
+            handlers.pathMouseDown(this, conn);
           });
-        });
+        }
+        for (const line of lines) {
+          this.lines.push({
+            id: conn.id,
+            from: line.from,
+            to: line.to,
+          });
+        }
+      });
     },
 
     async renderNodes() {
@@ -260,6 +236,16 @@ export default {
       let g = this.append("g");
       g.classed("guideline", true);
       lineTo(g, { x: x1, y: y1 }, { x: x2, y: y2 }, 1, "#a3a3a3", [5, 3]);
+    },
+
+    getConnectorPositions(node) {
+      const halfWidth = node.width / 2;
+      const halfHeight = node.height / 2;
+      const top = { x: node.x + halfWidth, y: node.y };
+      const left = { x: node.x, y: node.y + halfHeight };
+      const bottom = { x: node.x + halfWidth, y: node.y + node.height };
+      const right = { x: node.x + node.width, y: node.y + halfHeight };
+      return { left, right, top, bottom };
     },
 
     renderNode(node, isSelected) {
@@ -288,7 +274,7 @@ export default {
       });
 
       const connectors = [];
-      const connectorPosition = this.getConnectorPosition(node);
+      const connectorPosition = this.getConnectorPositions(node);
       for (const position in connectorPosition) {
         const positionElement = connectorPosition[position];
         const connector = g
@@ -463,7 +449,7 @@ export default {
   computed: {
     hoveredConnector() {
       for (const node of this.nodes) {
-        let connectorPosition = this.getConnectorPosition(node);
+        let connectorPosition = this.getConnectorPositions(node);
         for (let prop in connectorPosition) {
           let entry = connectorPosition[prop];
           if (

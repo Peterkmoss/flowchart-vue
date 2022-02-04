@@ -1,7 +1,16 @@
 import * as d3 from "d3";
-import { roundTo20 } from "../utils/math";
+import { roundTo20 } from "../math";
 
 const borderColor = (isSelected) => isSelected ? '#666666' : '#bbbbbb';
+
+const halfWidth = (node) => node.width / 2;
+const halfHeight = (node) => node.height / 2;
+const positionMap = {
+  top: (node) => ({ x: node.x + halfWidth(node), y: node.y }),
+  left: (node) => ({ x: node.x, y: node.y + halfHeight(node) }),
+  bottom: (node) => ({ x: node.x + halfWidth(node), y: node.y + node.height }),
+  right: (node) => ({ x: node.x + node.width, y: node.y + halfHeight(node) }),
+}
 
 class AbstractNode {
   constructor(id, x, y) {
@@ -14,6 +23,13 @@ class AbstractNode {
 
   // eslint-disable-next-line
   render(g, isSelected) { }
+
+  /**
+    * @param { 'top' | 'left' | 'right' | 'bottom' } position
+    */
+  connectorPosition(position) {
+    return positionMap[position](this);
+  }
 }
 
 export class StartNode extends AbstractNode {

@@ -186,3 +186,19 @@ export const chartMouseWheel = async (_this, event) => {
     svg.style.zoom = zoom;
   }
 }
+
+export const pathMouseDown = async (_this, conn) => {
+  d3.event.stopPropagation();
+  if (_this.pathClickedOnce) {
+    _this.editConnection(conn);
+  } else {
+    let timer = setTimeout(() => {
+      _this.pathClickedOnce = false;
+      clearTimeout(timer);
+    }, 300);
+    _this.pathClickedOnce = true;
+  }
+  _this.currentNodes.splice(0, _this.currentNodes.length);
+  _this.currentConnections.splice(0, _this.currentConnections.length);
+  _this.currentConnections.push(conn);
+}

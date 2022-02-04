@@ -3,7 +3,7 @@ import { OFFSET } from '../svg';
 import { TopPoint } from './TopPoint';
 import { BottomPoint } from './BottomPoint';
 import { LeftPoint } from './LeftPoint';
-import * as path from '../path';
+import * as path from '../Line';
 
 export class RightPoint extends Point {
   constructor(x, y) {
