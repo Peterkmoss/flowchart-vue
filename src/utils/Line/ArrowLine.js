@@ -17,6 +17,6 @@ export default class ArrowLine extends Line {
 
   arrow(g, from, to) {
     arrowTo(g, from, to, this.lineWidth, this.lineColor);
-    return arrowTo(g, from, to, 10, 'transparent');
+    return arrowTo(g, from, to, 5, 'transparent');
   }
 }

@@ -64,6 +64,6 @@ export default class Line {
 
   line(g, from, to) {
     lineTo(g, from, to, this.lineWidth, this.lineColor);
-    return lineTo(g, from, to, 10, 'transparent');
+    return lineTo(g, from, to, 5, 'transparent');
   }
 }

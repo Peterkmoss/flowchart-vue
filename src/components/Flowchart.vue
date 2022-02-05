@@ -468,30 +468,27 @@ export default {
     hoveredConnection() {
       for (const line of this.lines) {
         let distance = distanceOfPointToLine(
-          line.sourceX,
-          line.sourceY,
-          line.destinationX,
-          line.destinationY,
+          line.from.x,
+          line.from.y,
+          line.to.x,
+          line.to.y,
           this.cursorToChartOffset.x,
           this.cursorToChartOffset.y
         );
         if (
-          distance < 5 &&
+          distance < 20 &&
           between(
-            line.sourceX - 2,
-            line.destinationX + 2,
+            line.from.x - 2,
+            line.to.x + 2,
             this.cursorToChartOffset.x
           ) &&
           between(
-            line.sourceY - 2,
-            line.destinationY + 2,
+            line.from.y - 2,
+            line.to.y + 2,
             this.cursorToChartOffset.y
           )
         ) {
-          let connections = this.connections.filter(
-            (item) => item.id === line.id
-          );
-          return connections.length > 0 ? connections[0] : null;
+          return this.connections.find(item => item.id === line.id);
         }
       }
       return null;
