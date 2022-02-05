@@ -12,7 +12,7 @@ const positionMap = {
   right: (node) => ({ x: node.x + node.width, y: node.y + halfHeight(node) }),
 }
 
-class AbstractNode {
+export class Node {
   constructor(id, x, y) {
     this.id = id;
     this.x = x;
@@ -32,7 +32,7 @@ class AbstractNode {
   }
 }
 
-export class StartNode extends AbstractNode {
+export class StartNode extends Node {
   constructor(id, x, y) {
     super(id, x, y);
     this.name = "Start";
@@ -66,7 +66,7 @@ export class EndNode extends StartNode {
   render(g, isSelected) { super.render(g, isSelected) }
 }
 
-export class OperationNode extends AbstractNode {
+export class OperationNode extends Node {
   constructor(id, x, y, name) {
     super(id, x, y);
     this.name = name;
@@ -88,7 +88,7 @@ export class OperationNode extends AbstractNode {
   }
 }
 
-export class DecisionNode extends AbstractNode {
+export class DecisionNode extends Node {
   constructor(id, x, y, name) {
     super(id, x, y);
     this.name = name;

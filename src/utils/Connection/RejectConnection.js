@@ -8,6 +8,4 @@ export default class RejectConnection extends ArrowConnection {
   getColor(isSelected) {
     return isSelected ? 'darkred' : 'red';
   }
-
-  render(g, from, to, isSelected) { return super.render(g, from, to, isSelected) }
 }

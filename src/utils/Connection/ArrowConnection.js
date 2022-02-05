@@ -8,17 +8,29 @@ export default class ArrowConnection extends AbstractConnection {
     super(id, source, destination);
   }
 
+  /**
+    * @param { any } g
+    * @param { { x: number, y: number, node: Node, position: string } } from
+    * @param { { x: number, y: number, node: Node, position: string } } to
+    * @param { boolean } isSelected
+    */
   render(g, from, to, isSelected) {
     super.render(g, from, to, isSelected);
 
-    const fromPoint = new Builder().setX(from.x).setY(from.y).fromPosition(from.position).build();
-    const toPoint = new Builder().setX(to.x).setY(to.y).fromPosition(to.position).build();
+    const fromPoint = new Builder(from.x, from.y, from.node)
+      .fromPosition(from.position)
+      .build();
+
+    const toPoint = new Builder(to.x, to.y, to.node)
+      .fromPosition(to.position)
+      .build();
     
     const color = this.getColor(isSelected);
     const line = new ArrowLine(fromPoint, toPoint, color);
-    const lines = line.createPath();
 
+    const lines = line.createPath();
     const paths = line.renderPath(g);
+
     return { lines, paths };
   }
 }

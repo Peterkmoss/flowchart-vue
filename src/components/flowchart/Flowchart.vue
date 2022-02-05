@@ -183,18 +183,21 @@ export default {
 
       this.lines = [];
       this.connections.forEach(conn => {
-        // Create SVG element
         const g = this.append("g");
+        const fromNode = this.getNodeById(conn.source.id);
         const from = {
-          ...this.getNodeById(conn.source.id).connectorPosition(conn.source.position),
+          ...fromNode.connectorPosition(conn.source.position),
           position: conn.source.position,
-        }
+          node: fromNode,
+        };
+        const toNode = this.getNodeById(conn.destination.id);
         const to = {
-          ...this.getNodeById(conn.destination.id).connectorPosition(conn.destination.position),
+          ...toNode.connectorPosition(conn.destination.position),
           position: conn.destination.position,
-        }
+          node: toNode,
+        };
 
-        const isSelected = !!this.currentConnections.find(item => item === conn)
+        const isSelected = !!this.currentConnections.find(item => item === conn);
 
         const { paths, lines } = conn.render(g, from, to, isSelected)
 

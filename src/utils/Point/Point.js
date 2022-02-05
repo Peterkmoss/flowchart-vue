@@ -1,88 +1,119 @@
 /* eslint-disable no-unused-vars */
-import {approximatelyEquals} from '../math';
+/* eslint-disable no-console */
+import { Node } from '../Node'
+import { approximatelyEquals } from "../math";
 
 class Point {
+  /** @type { number }*/
   x;
+  /** @type { number }*/
   y;
-  centerY;
-  centerX;
+  /** @type { Node }*/
+  node;
+  /** @type { x: number, y: number }*/
+  middle;
+  /** @type { x: number, y: number }*/
   offsetPoint;
+  /** @type { x: number, y: number }*/
   connectStart;
+  /** @type { x: number, y: number }*/
   connectEnd;
 
   /**
     * @param { number } x
     * @param { number } y
+    * @param { Node } node
     */
-  constructor(x, y) { 
+  constructor(x, y, node) { 
     this.x = x;
     this.y = y;
-    this.centerY = 0;
-    this.centerX = 0;
+    this.node = node;
+    this.middle = { x: 0, y: 0 };
     this.offsetPoint = { x, y };
     this.connectStart = this.offsetPoint;
     this.connectEnd = this.offsetPoint;
   }
 
-  /**
-    * @param { Point } toPoint
-    */
-  _getDirection(toPoint) {
-    // Use approximatelyEquals to fix the problem of css position presicion
-    if (toPoint.x < this.x && approximatelyEquals(toPoint.y, this.y)) {
+  _getDirection() {
+    if (
+      this.connectEnd.x < this.connectStart.x 
+      && approximatelyEquals(this.connectEnd.y, this.connectStart.y)) {
       return 'l';
     }
-    if (toPoint.x > this.x && approximatelyEquals(toPoint.y, this.y)) {
+    if (
+      this.connectEnd.x > this.connectStart.x 
+      && approximatelyEquals(this.connectEnd.y, this.connectStart.y)) {
       return 'r';
     }
-    if (approximatelyEquals(toPoint.x, this.x) && toPoint.y < this.y) {
+    if (
+      this.connectEnd.y < this.connectStart.y 
+      && approximatelyEquals(this.connectEnd.x, this.connectStart.x)) {
       return 'u';
     }
-    if (approximatelyEquals(toPoint.x, this.x) && toPoint.y > this.y) {
+    if (
+      this.connectEnd.y > this.connectStart.y 
+      && approximatelyEquals(this.connectEnd.x, this.connectStart.x)) {
       return 'd';
     }
-    if (toPoint.x < this.x && toPoint.y < this.y) {
+    if (
+      this.connectEnd.x < this.connectStart.x 
+      && this.connectEnd.y < this.connectStart.y) {
       return 'lu';
     }
-    if (toPoint.x > this.x && toPoint.y < this.y) {
-      return 'ru';
-    }
-    if (toPoint.x < this.x && toPoint.y > this.y) {
+    if (
+      this.connectEnd.x < this.connectStart.x 
+      && this.connectEnd.y > this.connectStart.y) {
       return 'ld';
+    }
+    if (
+      this.connectEnd.x > this.connectStart.x 
+      && this.connectEnd.y < this.connectStart.y) {
+      return 'ru';
     }
     return 'rd';
   }
 
-  /**
-    * @param { Point } toPoint
-    */
-  connect(acc, toPoint) { 
-    this.start = this.offsetPoint;
-    this.end = toPoint.offsetPoint;
+  setupConnection(toPoint) {
+    this.connectStart = this.offsetPoint;
+    this.connectEnd = toPoint.offsetPoint;
 
-    this.centerX = this.x + (toPoint.x - this.x) / 2;
-    this.centerY = this.y + (toPoint.y - this.y) / 2;
-
-    switch (this._getDirection(toPoint)) {
-      case 'd': return this.connectDown(acc, toPoint);
-      case 'u': return this.connectUp(acc, toPoint);
-      case 'l': return this.connectLeft(acc, toPoint);
-      case 'r': return this.connectRight(acc, toPoint);
-      case 'ld': return this.connectLeftDown(acc, toPoint);
-      case 'lu': return this.connectLeftUp(acc, toPoint);
-      case 'rd': return this.connectRightDown(acc, toPoint);
-      case 'ru': return this.connectRightUp(acc, toPoint);
+    this.middle = {
+      x: this.x + (toPoint.x - this.x) / 2,
+      y: this.y + (toPoint.y - this.y) / 2,
     }
   }
 
-  connectDown(acc, toPoint) {}
-  connectLeft(acc, toPoint) {}
-  connectRight(acc, toPoint) {}
-  connectUp(acc, toPoint) {}
-  connectLeftUp(acc, toPoint) {}
-  connectLeftDown(acc, toPoint) {}
-  connectRightUp(acc, toPoint) {}
-  connectRightDown(acc, toPoint) {}
+  /**
+    * @param { { x: number, y: number }[] } acc
+    * @param { Point } toPoint
+    */
+  connect(acc, toPoint) { 
+    this.setupConnection(toPoint);
+  }
+
+  /**
+    * Incoming connection from a LeftPoint
+    * @param { Point } fromPoint
+    */
+  left(fromPoint) { return; }
+
+  /**
+    * Incoming connection from a RightPoint
+    * @param { Point } fromPoint
+    */
+  right(fromPoint) { return; }
+
+  /**
+    * Incoming connection from a TopPoint
+    * @param { Point } fromPoint
+    */
+  top(fromPoint) { return; }
+
+  /**
+    * Incoming connection from a BottomPoint
+    * @param { Point } fromPoint
+    */
+  bottom(fromPoint) { return; }
 }
 
 export default Point

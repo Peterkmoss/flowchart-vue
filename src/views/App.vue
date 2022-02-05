@@ -36,6 +36,7 @@
   </div>
 </template>
 <script>
+/* eslint-disable no-unused-vars */
 import ConnectionDialog from "../components/ConnectionDialog";
 import NodeDialog from "../components/NodeDialog";
 import Flowchart from "../components/flowchart/Flowchart";
@@ -57,20 +58,25 @@ export default {
         new EndNode(4, 550, 220),
       ],
       connections: [
-        new ArrowConnection(
+        new RejectConnection(
           1, 
-          { id: 1, position: "right" }, 
-          { id: 2, position: "left" }
+          { id: 3, position: "top" }, 
+          { id: 4, position: "bottom" }
         ),
-        new PassConnection(
+        new RejectConnection(
           2, 
-          { id: 2, position: "right" }, 
-          { id: 3, position: "top" }
+          { id: 3, position: "left" }, 
+          { id: 4, position: "bottom" }
         ),
         new RejectConnection(
           3, 
+          { id: 3, position: "right" }, 
+          { id: 4, position: "bottom" }
+        ),
+        new RejectConnection(
+          4, 
           { id: 3, position: "bottom" }, 
-          { id: 4, position: "right" }
+          { id: 4, position: "bottom" }
         ),
       ],
       nodeForm: { target: null },

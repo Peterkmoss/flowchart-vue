@@ -1,11 +1,14 @@
 /* eslint-disable no-unused-vars */
 import Point, { BottomPoint, LeftPoint, RightPoint, TopPoint } from '.';
+import { Node } from '../Node';
 
 export class Builder {
   /** @type { number } */
   #x;
   /** @type { number } */
   #y;
+  /** @type { Node } */
+  #node;
   /** @type { Point } */
   #point;
 
@@ -13,9 +16,10 @@ export class Builder {
     * @param { number } x
     * @param { number } y
     */
-  constructor(x, y) {
+  constructor(x, y, node) {
     this.#x = x;
     this.#y = y;
+    this.#node = node;
     this.#point = null;
     return this;
   }
@@ -24,6 +28,7 @@ export class Builder {
     if (!this.#point) {
       throw new Error('you need to set the type of point you want to create');
     }
+    this._checkNode();
     return this.#point; 
   }
 
@@ -37,6 +42,11 @@ export class Builder {
     return this;
   }
 
+  setNode(node) {
+    this.#node = node;
+    return this;
+  }
+
   fromPosition(position) {
     switch (position) {
       case 'left': return this.left();
@@ -47,23 +57,33 @@ export class Builder {
     }
   }
 
+  _checkNode() {
+    if (!this.#node) {
+      throw new Error('you need to provide a node');
+    }
+  }
+
   left() { 
-    this.#point = new LeftPoint(this.#x, this.#y);
+    this._checkNode();
+    this.#point = new LeftPoint(this.#x, this.#y, this.#node);
     return this;
   }
 
   right() { 
-    this.#point = new RightPoint(this.#x, this.#y);
+    this._checkNode();
+    this.#point = new RightPoint(this.#x, this.#y, this.#node);
     return this;
   }
 
   bottom() { 
-    this.#point = new BottomPoint(this.#x, this.#y);
+    this._checkNode();
+    this.#point = new BottomPoint(this.#x, this.#y, this.#node);
     return this;
   }
 
   top() { 
-    this.#point = new TopPoint(this.#x, this.#y);
+    this._checkNode();
+    this.#point = new TopPoint(this.#x, this.#y, this.#node);
     return this;
   }
 }
