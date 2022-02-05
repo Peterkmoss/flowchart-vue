@@ -28,7 +28,7 @@ export class RightPoint extends Point {
     switch (direction) {
       case 'd':
       case 'rd': {
-        if (this.connectStart.x > fromPoint.node.x - OFFSET) {
+        if (this.connectStart.x > this.fromPointBox.l) {
           acc.push({ x: this.fromPointBox.l, y: this.connectEnd.y });
           acc.push({ x: this.fromPointBox.l, y: this.middle.y });
           acc.push({ x: this.connectStart.x, y: this.middle.y });
@@ -59,7 +59,7 @@ export class RightPoint extends Point {
       }
       case 'u':
       case 'ru': {
-        if (this.node.x + this.node.width + OFFSET > this.connectEnd.x) {
+        if (this.pointBox.r > this.connectEnd.x) {
           acc.push({ x: this.pointBox.r, y: this.connectEnd.y });
           acc.push({ x: this.pointBox.r, y: this.connectStart.y });
         } else {

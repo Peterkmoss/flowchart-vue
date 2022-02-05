@@ -60,8 +60,8 @@ export default {
       connections: [
         new RejectConnection(
           1, 
-          { id: 3, position: "right" }, 
-          { id: 4, position: "right" }
+          { id: 3, position: "top" }, 
+          { id: 4, position: "left" }
         ),
         /* new RejectConnection( */
         /*   2,  */

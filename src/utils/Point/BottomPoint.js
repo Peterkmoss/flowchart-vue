@@ -35,7 +35,7 @@ export class BottomPoint extends Point {
     switch (direction) {
       case 'd':
       case 'rd': {
-        if (this.connectStart.x > fromPoint.node.x - OFFSET) {
+        if (this.connectStart.x > this.fromPointBox.l) {
           acc.push({ x: leftOfFrom, y: this.connectEnd.y });
           acc.push({ x: leftOfFrom, y: this.middle.y });
           acc.push({ x: this.connectStart.x, y: this.middle.y });
@@ -45,7 +45,7 @@ export class BottomPoint extends Point {
         return;
       }
       case 'ld': {
-        if (this.connectStart.x < fromPoint.node.x + fromPoint.node.width + OFFSET) {
+        if (this.connectStart.x < this.fromPointBox.r) {
           acc.push({ x: rightOfFrom, y: this.connectEnd.y });
           acc.push({ x: rightOfFrom, y: this.middle.y });
           acc.push({ x: this.connectStart.x, y: this.middle.y });
@@ -64,7 +64,7 @@ export class BottomPoint extends Point {
       }
       case 'u':
       case 'ru': {
-        if (this.node.x + this.node.width + OFFSET > this.connectEnd.x) {
+        if (this.pointBox.r > this.connectEnd.x) {
           acc.push({ x: rightOfThis, y: this.connectEnd.y });
           acc.push({ x: rightOfThis, y: this.connectStart.y });
         } else {
@@ -73,7 +73,7 @@ export class BottomPoint extends Point {
         return;
       }
       case 'lu': {
-        if (this.node.x - OFFSET < this.connectEnd.x) {
+        if (this.pointBox.l < this.connectEnd.x) {
           acc.push({ x: leftOfThis, y: this.connectEnd.y });
           acc.push({ x: leftOfThis, y: this.connectStart.y });
         } else {
@@ -99,7 +99,7 @@ export class BottomPoint extends Point {
     switch (direction) {
       case 'l':
       case 'lu': {
-        if (this.connectEnd.x > this.node.x - OFFSET) {
+        if (this.connectEnd.x > this.pointBox.l) {
           acc.push({ x: leftOfThis, y: this.connectEnd.y });
           acc.push({ x: leftOfThis, y: this.connectStart.y });
         } else {
@@ -109,11 +109,11 @@ export class BottomPoint extends Point {
         return;
       }
       case 'ld': {
-        if (this.connectStart.y + OFFSET > fromPoint.node.y - OFFSET) {
+        if (this.pointBox.b > this.fromPointBox.t) {
           acc.push({ x: this.connectEnd.x, y: belowFrom });
-          if (this.connectStart.x <= fromPoint.node.x + fromPoint.node.width + OFFSET) {
-            acc.push({ x: fromPoint.node.x + fromPoint.node.width + OFFSET, y: belowFrom });
-            acc.push({ x: fromPoint.node.x + fromPoint.node.width + OFFSET, y: this.connectStart.y });
+          if (this.connectStart.x <= this.fromPointBox.r) {
+            acc.push({ x: this.fromPointBox.r, y: belowFrom });
+            acc.push({ x: this.fromPointBox.r, y: this.connectStart.y });
             return;
           }
           acc.push({ x: this.connectStart.x, y: belowFrom });
@@ -130,13 +130,13 @@ export class BottomPoint extends Point {
       }
       case 'u':
       case 'ru': {
-        if (this.connectEnd.x > this.node.x + this.node.width + OFFSET * 2) {
+        if (this.connectEnd.x > this.pointBox.r) {
           acc.push({ x: rightOfThis, y: this.connectEnd.y });
           acc.push({ x: rightOfThis, y: this.connectStart.y });
         } else if (this.connectEnd.x >= this.node.x) {
-          if (this.connectEnd.y > this.node.y - OFFSET) {
-            acc.push({ x: this.connectEnd.x, y: this.node.y - OFFSET });
-            acc.push({ x: leftOfThis, y: this.node.y - OFFSET });
+          if (this.connectEnd.y > this.pointBox.t) {
+            acc.push({ x: this.connectEnd.x, y: this.pointBox.t });
+            acc.push({ x: leftOfThis, y: this.pointBox.t });
             acc.push({ x: leftOfThis, y: this.connectStart.y });
           } else {
             acc.push({ x: leftOfThis, y: this.connectEnd.y });
