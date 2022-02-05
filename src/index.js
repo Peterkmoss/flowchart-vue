@@ -1,4 +1,4 @@
-import Flowchart from './components/flowchart';
+import Flowchart from './components/Flowchart';
 import * as Nodes from './utils/Node';
 import * as Connections from './utils/Connection';
 

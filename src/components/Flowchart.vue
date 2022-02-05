@@ -20,17 +20,15 @@
 </template>
 <style src="./index.css"></style>
 <script>
-import { lineTo } from "../../utils/svg";
+import { lineTo } from "../utils/svg";
 import * as d3 from "d3";
-import * as handlers from "../../handlers";
+import * as handlers from "../handlers";
 import {
   between,
   distanceOfPointToLine,
   getEdgeOfPoints,
   pointRectangleIntersection,
-} from "../../utils/math";
-
-/* eslint-disable */
+} from "../utils/math";
 
 export default {
   props: {

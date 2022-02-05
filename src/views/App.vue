@@ -39,7 +39,7 @@
 /* eslint-disable no-unused-vars */
 import ConnectionDialog from "../components/ConnectionDialog";
 import NodeDialog from "../components/NodeDialog";
-import Flowchart from "../components/flowchart/Flowchart";
+import Flowchart from "../components/Flowchart";
 import { StartNode, EndNode, OperationNode, DecisionNode } from "../utils/Node";
 import { PassConnection, ArrowConnection, RejectConnection } from "../utils/Connection";
 
@@ -60,24 +60,24 @@ export default {
       connections: [
         new RejectConnection(
           1, 
-          { id: 3, position: "top" }, 
-          { id: 4, position: "bottom" }
-        ),
-        new RejectConnection(
-          2, 
-          { id: 3, position: "left" }, 
-          { id: 4, position: "bottom" }
-        ),
-        new RejectConnection(
-          3, 
           { id: 3, position: "right" }, 
-          { id: 4, position: "bottom" }
+          { id: 4, position: "right" }
         ),
-        new RejectConnection(
-          4, 
-          { id: 3, position: "bottom" }, 
-          { id: 4, position: "bottom" }
-        ),
+        /* new RejectConnection( */
+        /*   2,  */
+        /*   { id: 3, position: "left" },  */
+        /*   { id: 4, position: "bottom" } */
+        /* ), */
+        /* new RejectConnection( */
+        /*   3,  */
+        /*   { id: 3, position: "right" },  */
+        /*   { id: 4, position: "bottom" } */
+        /* ), */
+        /* new RejectConnection( */
+        /*   4,  */
+        /*   { id: 3, position: "bottom" },  */
+        /*   { id: 4, position: "bottom" } */
+        /* ), */
       ],
       nodeForm: { target: null },
       connectionForm: { target: null, operation: null },
