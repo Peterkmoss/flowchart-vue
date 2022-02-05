@@ -4,34 +4,11 @@ import Point from './Point';
 import { OFFSET } from '..';
 
 export class BottomPoint extends Point {
-  /** @type { { l: number, r: number, t: number, b: number } } */
-  pointBox;
-  /** @type { { l: number, r: number, t: number, b: number } } */
-  fromPointBox;
-
   constructor(x, y, node) {
     super(x, y, node);
     this.offsetPoint = { x: this.x, y: this.y + OFFSET };
   }
 
-  setupConnection(fromPoint) {
-    super.setupConnection(fromPoint);
-
-    this.pointBox = {
-      r: this.node.x + this.node.width + OFFSET,
-      b: this.node.y + this.node.height + OFFSET,
-      t: this.node.y - OFFSET,
-      l: this.node.x - OFFSET,
-    }
-
-    this.fromPointBox = {
-      r: fromPoint.node.x + fromPoint.node.width + OFFSET,
-      b: fromPoint.node.y + fromPoint.node.height + OFFSET,
-      t: fromPoint.node.y - OFFSET,
-      l: fromPoint.node.x - OFFSET,
-    }
-  }
-  
   /**
     * @param { Point[] } acc
     * @param { Point } toPoint

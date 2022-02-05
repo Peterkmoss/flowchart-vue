@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 import { Node } from '../Node'
 import { approximatelyEquals } from "../math";
+import { OFFSET } from '..';
 
 class Point {
   /** @type { number }*/
@@ -18,6 +19,10 @@ class Point {
   connectStart;
   /** @type { x: number, y: number }*/
   connectEnd;
+  /** @type { { l: number, r: number, t: number, b: number } } */
+  pointBox;
+  /** @type { { l: number, r: number, t: number, b: number } } */
+  fromPointBox;
 
   /**
     * @param { number } x
@@ -73,13 +78,27 @@ class Point {
     return 'rd';
   }
 
-  setupConnection(toPoint) {
+  setupConnection(point) {
     this.connectStart = this.offsetPoint;
-    this.connectEnd = toPoint.offsetPoint;
+    this.connectEnd = point.offsetPoint;
 
     this.middle = {
-      x: this.x + (toPoint.x - this.x) / 2,
-      y: this.y + (toPoint.y - this.y) / 2,
+      x: this.x + (point.x - this.x) / 2,
+      y: this.y + (point.y - this.y) / 2,
+    }
+
+    this.pointBox = {
+      r: this.node.x + this.node.width + OFFSET,
+      b: this.node.y + this.node.height + OFFSET,
+      t: this.node.y - OFFSET,
+      l: this.node.x - OFFSET,
+    }
+
+    this.fromPointBox = {
+      r: point.node.x + point.node.width + OFFSET,
+      b: point.node.y + point.node.height + OFFSET,
+      t: point.node.y - OFFSET,
+      l: point.node.x - OFFSET,
     }
   }
 
@@ -87,9 +106,7 @@ class Point {
     * @param { { x: number, y: number }[] } acc
     * @param { Point } toPoint
     */
-  connect(acc, toPoint) { 
-    this.setupConnection(toPoint);
-  }
+  connect(acc, toPoint) { return; }
 
   /**
     * Incoming connection from a LeftPoint
