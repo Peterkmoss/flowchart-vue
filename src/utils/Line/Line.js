@@ -59,6 +59,11 @@ export default class Line {
   }
 
   renderPoint(g, from, to) {
-    return lineTo(g, from, to, this.lineWidth, this.lineColor);
+    return this.lineTo(g, from, to);
+  }
+
+  line(g, from, to) {
+    lineTo(g, from, to, this.lineWidth, this.lineColor);
+    return lineTo(g, from, to, 10, 'transparent');
   }
 }

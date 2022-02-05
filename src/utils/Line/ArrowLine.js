@@ -1,5 +1,5 @@
 import Line from './Line'
-import { lineTo, arrowTo } from '../svg';
+import { arrowTo } from '../svg';
 
 export default class ArrowLine extends Line {
   constructor(fromPoint, toPoint, color) {
@@ -10,8 +10,13 @@ export default class ArrowLine extends Line {
   renderPoint(g, from, to) {
     const last = this.points.indexOf(to) === this.points.length - 1
     if (last) {
-      return arrowTo(g, from, to, this.lineWidth, this.lineColor);
+      return this.arrow(g, from, to);
     }
-    return lineTo(g, from, to, this.lineWidth, this.lineColor);
+    return this.line(g, from, to);
+  }
+
+  arrow(g, from, to) {
+    arrowTo(g, from, to, this.lineWidth, this.lineColor);
+    return arrowTo(g, from, to, 10, 'transparent');
   }
 }
