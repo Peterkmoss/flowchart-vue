@@ -16,7 +16,7 @@ export function lineTo(g, from, to, lineWidth, strokeStyle, dash) {
 }
 
 export function arrowTo(g, from, to, lineWidth, strokeStyle) {
-  let path = lineTo(g, from, to, lineWidth, strokeStyle);
+  const path = lineTo(g, from, to, lineWidth, strokeStyle);
   const id = 'arrow' + strokeStyle.replace('#', '');
   g.append('marker').
       attr('id', id).
