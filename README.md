@@ -2,6 +2,8 @@
 
 Flowchart & Flowchart designer component for Vue.js.
 
+[![NPM](https://img.shields.io/npm/v/@peterkmoss/flowchart-vue)](https://www.npmjs.com/package/@peterkmoss/flowchart-vue)
+
 This is a fork of [joyceworks/flowchart-vue](https://github.com/joyceworks/flowchart-vue) which focuses on scalability and extendability of the code base.
 
 ## Usage
@@ -87,23 +89,19 @@ npm i @peterkmoss/flowchart-vue
 </script>
 ```
 
-See more at [src/views/App.vue](https://github.com/joyceworks/flowchart-vue/blob/master/src/views/App.vue).
-
 ## Demo
-
-- [GitHub Pages](https://joyceworks.github.io/flowchart-vue/)
 
 - Development Environment
 
   ``` shell
-  git clone https://github.com/joyceworks/flowchart-vue.git
+  git clone https://github.com/Peterkmoss/flowchart-vue.git
   cd flowchart-vue
-  yarn install
-  yarn run serve
+  yarn install # or npm install
+  yarn run serve # or npm run serve
   ```
   
-  Then open http://localhost:yourport/ in browser.
+  Then open http://localhost:8080/ (or other assigned port) in browser.
 
-## API
+## API - TODO for this fork
 
-See [Wiki](https://github.com/joyceworks/flowchart-vue/wiki).
+See joyceworks' [Wiki](https://github.com/joyceworks/flowchart-vue/wiki).
