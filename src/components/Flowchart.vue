@@ -298,18 +298,12 @@ export default {
     },
 
     getConnectorPositions(node) {
-      const halfWidth = node.width / 2;
-      const halfHeight = node.height / 2;
-      const top = { x: node.x + halfWidth, y: node.y };
-      const left = { x: node.x, y: node.y + halfHeight };
-      const bottom = { x: node.x + halfWidth, y: node.y + node.height };
-      const right = { x: node.x + node.width, y: node.y + halfHeight };
-      return { left, right, top, bottom };
+      return node.connectorPositions;
     },
 
     getCurrentNodesEdge() {
       const points = this.currentNodes.map(node => node.boundaryBox);
-      return getEdgeOfPoints(points);
+      return getEdgeOfPoints(points.flat());
     },
 
     save() {

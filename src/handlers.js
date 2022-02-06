@@ -41,11 +41,13 @@ export const nodeDragMove = (_this) => {
   // Clear guide lines
   d3.selectAll("#svg > g.guideline").remove();
 
-  const edge = _this.getCurrentNodesEdge();
-  const expectX = Math.round(Math.round(edge.start.x) / 10) * 10;
-  const expectY = Math.round(Math.round(edge.start.y) / 10) * 10;
+  const approx = (number) => Math.round(Math.round(number) / 10) * 10;
 
-  const guideNodes = _this.nodes.filter(node => _this.currentNodes.find(currentNode => currentNode !== node))
+  const edge = _this.getCurrentNodesEdge();
+  const expectX = approx(edge.start.x);
+  const expectY = approx(edge.start.y);
+
+  const guideNodes = _this.nodes.filter(node => !_this.currentNodes.find(currentNode => currentNode === node))
   for (const node of guideNodes) {
     if (node.x === expectX) {
       // vertical guideline
