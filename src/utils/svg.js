@@ -1,5 +1,4 @@
 import * as d3 from 'd3';
-import {approximatelyEquals} from './math';
 
 export const OFFSET = 20;
 
@@ -33,30 +32,4 @@ export function arrowTo(g, from, to, lineWidth, strokeStyle) {
       attr('fill', strokeStyle);
   path.attr('marker-end', 'url(#' + id + ')');
   return path;
-}
-
-export const getDirection = (from, to) => {
-  // Use approximatelyEquals to fix the problem of css position presicion
-  if (to.x < from.x && approximatelyEquals(to.y, from.y)) {
-    return 'l';
-  }
-  if (to.x > from.x && approximatelyEquals(to.y, from.y)) {
-    return 'r';
-  }
-  if (approximatelyEquals(to.x, from.x) && to.y < from.y) {
-    return 'u';
-  }
-  if (approximatelyEquals(to.x, from.x) && to.y > from.y) {
-    return 'd';
-  }
-  if (to.x < from.x && to.y < from.y) {
-    return 'lu';
-  }
-  if (to.x > from.x && to.y < from.y) {
-    return 'ru';
-  }
-  if (to.x < from.x && to.y > from.y) {
-    return 'ld';
-  }
-  return 'rd';
 }
