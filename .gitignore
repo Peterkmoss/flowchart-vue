@@ -81,3 +81,5 @@ typings/
 
 .idea/
 nohup.out
+
+dist
