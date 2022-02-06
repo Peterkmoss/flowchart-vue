@@ -1,5 +1,6 @@
-src
+.github
+src/**/*
 babel.config.js
-public
-dist
-dist/FlowChart.umd.min.js
+public/**/*
+dist/**/*
+!dist/FlowChart.umd.min.js
