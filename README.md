@@ -2,6 +2,8 @@
 
 Flowchart & Flowchart designer component for Vue.js.
 
+This is a fork of [joyceworks/flowchart-vue](https://github.com/joyceworks/flowchart-vue) which focuses on scalability and extendability of the code base.
+
 ## Usage
 
 ```shell script
