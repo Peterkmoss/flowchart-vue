@@ -2978,10 +2978,20 @@
     "d3-time" "1"
     "d3-time-format" "2"
 
-"d3-selection@^1.1.0", "d3-selection@1":
-  "integrity" "sha1-mO7bvghfvaW6+i+ePzovTX1iKpg= sha512-BTIbRjv/m5rcVTfBs4AMBLKs4x8XaaLkwm28KWu9S2vKNqXkXt2AH2Qf0sdPZHjFxcWg/YL53zcqAz+3g4/7PA=="
-  "resolved" "https://registry.npm.taobao.org/d3-selection/download/d3-selection-1.4.1.tgz"
-  "version" "1.4.1"
+"d3-selection@^1.1.0":
+  "integrity" "sha512-SJ0BqYihzOjDnnlfyeHT0e30k0K1+5sR3d5fNueCNeuhZTnGw4M4o8mqJchSwgKMXCNFo+e2VTChiSJ0vYtXkg=="
+  "resolved" "https://registry.npmjs.org/d3-selection/-/d3-selection-1.4.2.tgz"
+  "version" "1.4.2"
+
+"d3-selection@^3.0.0":
+  "integrity" "sha512-fmTRWbNMmsmWq6xJV8D19U/gw/bwrHfNXxrIN+HfZgnzqTHp9jOmKMhsTUjXOJnZOdZY9Q28y4yebKzqDKlxlQ=="
+  "resolved" "https://registry.npmjs.org/d3-selection/-/d3-selection-3.0.0.tgz"
+  "version" "3.0.0"
+
+"d3-selection@1":
+  "integrity" "sha512-SJ0BqYihzOjDnnlfyeHT0e30k0K1+5sR3d5fNueCNeuhZTnGw4M4o8mqJchSwgKMXCNFo+e2VTChiSJ0vYtXkg=="
+  "resolved" "https://registry.npmjs.org/d3-selection/-/d3-selection-1.4.2.tgz"
+  "version" "1.4.2"
 
 "d3-shape@1":
   "integrity" "sha1-32OAG+B7yYa8VPY3ibT+UCmStdc= sha512-EUkvKjqPFUAZyOlhY5gzCxCeI0Aep04LwIRpsZ/mLFelJiUfnK56jo5JMDSE7yyP2kLSb6LtF+S5chMk7uqPqw=="
@@ -3035,7 +3045,7 @@
     "d3-selection" "1"
     "d3-transition" "1"
 
-"d3@^5.15.0", "d3@^5.16.0":
+"d3@^5.15.0":
   "integrity" "sha512-4PL5hHaHwX4m7Zr1UapXW23apo6pexCgdetdJ5kTmADpG/7T9Gkxw0M0tf/pjoB63ezCCm0u5UaFYy2aMt0Mcw=="
   "resolved" "https://registry.npmjs.org/d3/-/d3-5.16.0.tgz"
   "version" "5.16.0"
