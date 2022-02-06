@@ -15,10 +15,10 @@ npm i @peterkmoss/flowchart-vue
 ```vue
 <template>
     <div id="app">
-      <button @click="addStart">Add Start</button>
-      <button @click="addEnd">Add End</button>
-      <button @click="addOperation">Add Operation</button>
-      <button @click="addDecision">Add Decision</button>
+      <button @click="addRounded">Add Rounded</button>
+      <button @click="addRectangle">Add Rectangle</button>
+      <button @click="addDiamond">Add Diamond</button>
+      <button @click="addCircle">Add Circle</button>
       <button @click="$refs.chart.remove()">Delete(Del)</button>
       <button @click="$refs.chart.editCurrent()"> Edit(Double-click node)</button>
       <button @click="$refs.chart.save()">Save</button>
@@ -45,32 +45,47 @@ npm i @peterkmoss/flowchart-vue
     data() {
       return {
         nodes: [
-          new Nodes.StartNode(1, 100, 220),
-          new Nodes.OperationNode(2, 250, 220, "Op"),
-          new Nodes.DesicionNode(3, 400, 220, "De"),
-          new Nodes.EndNode(4, 550, 220),
+          new Nodes.RoundedNode(1, 100, 220, "Start"),
+          new Nodes.RectangleNode(2, 250, 100),
+          new Nodes.DiamondNode(3, 400, 400, "Something"),
+          new Nodes.CircleNode(4, 550, 220, "End"),
         ],
         connections: [
-          new Connections.ArrowConnection(
+          new Connections.RejectConnection(
             1, 
+            { id: 1, position: "top" }, 
+            { id: 2, position: "top" },
+          ),
+          new Connections.PassConnection(
+            2, 
+            { id: 2, position: "right" }, 
+            { id: 3, position: "top" },
+          ),
+          new Connections.PassConnection(
+            3, 
             { id: 1, position: "right" }, 
-            { id: 2, position: "left" }
-          )
+            { id: 3, position: "left" },
+          ),
+          new Connections.ArrowConnection(
+            4, 
+            { id: 3, position: "right" }, 
+            { id: 4, position: "bottom" },
+          ),
         ],
       };
     },
     methods: {
-      addEnd() {
-        this.add(100, 100, Nodes.EndNode);
+      addRounded() {
+        this.add(100, 100, Nodes.RoundedNode);
       },
-      addStart() {
-        this.add(100, 100, Nodes.StartNode);
+      addRectangle() {
+        this.add(100, 100, Nodes.RectangleNode);
       },
-      addDecision() {
-        this.add(100, 100, Nodes.DesicionNode);
+      addCircle() {
+        this.add(100, 100, Nodes.CircleNode);
       },
-      addOperation() {
-        this.add(100, 100, Nodes.OperationNode);
+      addDiamond() {
+        this.add(100, 100, Nodes.DiamondNode);
       },
       add(x, y, cls) {
         this.$refs.chart.add(new cls(+new Date(), x, y, "New"))
