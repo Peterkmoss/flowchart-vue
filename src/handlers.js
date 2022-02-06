@@ -1,5 +1,6 @@
 import * as d3 from "d3";
-import { PassConnection, TmpConnection } from './utils/Connection';
+import { PassConnection } from './utils/Connection';
+import TmpConnection from './utils/Connection/TmpConnection';
 
 export const nodeDragStart = (_this, node) => {
   const isSelected = _this.currentNodes.find(item => item === node);
