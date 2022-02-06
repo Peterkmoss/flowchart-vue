@@ -4,3 +4,4 @@ babel.config.js
 public/**/*
 dist/**/*
 !dist/FlowChart.umd.min.js
+vue.config.js
