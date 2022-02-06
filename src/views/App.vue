@@ -60,24 +60,9 @@ export default {
       connections: [
         new RejectConnection(
           1, 
-          { id: 3, position: "top" }, 
-          { id: 4, position: "left" }
+          { id: 1, position: "bottom" }, 
+          { id: 2, position: "top" },
         ),
-        /* new RejectConnection( */
-        /*   2,  */
-        /*   { id: 3, position: "left" },  */
-        /*   { id: 4, position: "bottom" } */
-        /* ), */
-        /* new RejectConnection( */
-        /*   3,  */
-        /*   { id: 3, position: "right" },  */
-        /*   { id: 4, position: "bottom" } */
-        /* ), */
-        /* new RejectConnection( */
-        /*   4,  */
-        /*   { id: 3, position: "bottom" },  */
-        /*   { id: 4, position: "bottom" } */
-        /* ), */
       ],
       nodeForm: { target: null },
       connectionForm: { target: null, operation: null },

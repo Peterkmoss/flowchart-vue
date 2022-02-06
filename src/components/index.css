@@ -30,11 +30,19 @@
     opacity: 0;
 }
 
+.connector.disabled {
+    cursor: not-allowed;
+}
+
 .connector.active {
     opacity: 1;
     fill: white;
-    stroke: #bbbbbb;
+    stroke: #bbb;
     stroke-width: 1px;
+}
+
+.connector.disabled:hover {
+    stroke: #bbb;
 }
 
 .connector:hover {

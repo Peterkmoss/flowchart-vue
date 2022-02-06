@@ -1,8 +1,8 @@
 import ArrowConnection from './ArrowConnection';
 
 export default class RejectConnection extends ArrowConnection {
-  constructor(id, source, destination) {
-    super(id, source, destination);
+  constructor(id, from, to) {
+    super(id, from, to);
   }
 
   getColor(isSelected) {

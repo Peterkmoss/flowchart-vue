@@ -1,16 +1,24 @@
+/* eslint-disable */
 import * as d3 from "d3";
 import { roundTo20 } from "../math";
+import Connector from '../Connector';
+import DisabledConnector from '../DisabledConnector';
 
 const borderColor = (isSelected) => isSelected ? '#666666' : '#bbbbbb';
 
 const halfWidth = (node) => node.width / 2;
 const halfHeight = (node) => node.height / 2;
-const positionMap = {
-  top: (node) => ({ x: node.x + halfWidth(node), y: node.y }),
-  left: (node) => ({ x: node.x, y: node.y + halfHeight(node) }),
-  bottom: (node) => ({ x: node.x + halfWidth(node), y: node.y + node.height }),
-  right: (node) => ({ x: node.x + node.width, y: node.y + halfHeight(node) }),
-}
+const positionMap = (node) => ({
+  top: { x: node.x + halfWidth(node), y: node.y },
+  left: { x: node.x, y: node.y + halfHeight(node) },
+  bottom: { x: node.x + halfWidth(node), y: node.y + node.height },
+  right: { x: node.x + node.width, y: node.y + halfHeight(node) },
+});
+
+const createBoundaryBox = (node) => [
+  { x: node.x, y: node.y },
+  { x: node.x + node.width, y: node.y + node.height },
+];
 
 export class Node {
   constructor(id, x, y) {
@@ -28,7 +36,27 @@ export class Node {
     * @param { 'top' | 'left' | 'right' | 'bottom' } position
     */
   connectorPosition(position) {
-    return positionMap[position](this);
+    return positionMap(this)[position];
+  }
+
+  get connectorPositions() {
+    return positionMap(this);
+  }
+
+  get boundaryBox() {
+    return createBoundaryBox(this);
+  }
+
+  renderConnectors(g, flowChart) {
+    const connectors = [];
+    for (const [key, position] of Object.entries(this.connectorPositions)) {
+      connectors.push(new Connector(g, key, position, this, flowChart));
+    }
+    g.on("mouseover", () => {
+      connectors.forEach(conn => conn.setActive());
+    }).on("mouseout", () => {
+      connectors.forEach(conn => conn.setInactive());
+    });
   }
 }
 
@@ -36,7 +64,6 @@ export class StartNode extends Node {
   constructor(id, x, y) {
     super(id, x, y);
     this.name = "Start";
-    this.type = "start";
   }
 
   render(g, isSelected) {
@@ -55,22 +82,29 @@ export class StartNode extends Node {
   }
 }
 
-// For now the same as StartNode
 export class EndNode extends StartNode {
   constructor(id, x, y) {
     super(id, x, y);
     this.name = "End";
-    this.type = "end";
   }
 
-  render(g, isSelected) { super.render(g, isSelected) }
+  renderConnectors(g, flowChart) {
+    const connectors = [];
+    for (const [key, position] of Object.entries(this.connectorPositions)) {
+      connectors.push(new DisabledConnector(g, key, position, this, flowChart));
+    }
+    g.on("mouseover", () => {
+      connectors.forEach(conn => conn.setActive());
+    }).on("mouseout", () => {
+      connectors.forEach(conn => conn.setInactive());
+    });
+  }
 }
 
 export class OperationNode extends Node {
   constructor(id, x, y, name) {
     super(id, x, y);
     this.name = name;
-    this.type = "operation";
   }
 
   render(g, isSelected) { 
@@ -92,7 +126,6 @@ export class DecisionNode extends Node {
   constructor(id, x, y, name) {
     super(id, x, y);
     this.name = name;
-    this.type = "desicion";
   }
 
   render(g, isSelected) {

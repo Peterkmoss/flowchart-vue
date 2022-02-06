@@ -2,8 +2,16 @@
 import { Point } from '../Point';
 import { lineTo } from '../svg';
 
+/** @param { Line } line */
+const createBoundaryBox = (line) => [
+  { x: line.fromPoint.x, y: line.fromPoint.y },
+  { x: line.toPoint.x, y: line.toPoint.y },
+];
+
 export default class Line {
+  /** @type { Point } */
   fromPoint;
+  /** @type { Point } */
   toPoint;
   /** @type { { x: number, y: number }[] } */
   points;
@@ -11,6 +19,7 @@ export default class Line {
   lineColor;
   /** @type { string } */
   lineWidth;
+  boundaryBox;
 
   /**
     * @param { Point } fromPoint
@@ -22,7 +31,11 @@ export default class Line {
     this.toPoint = toPoint;
     this.points = [];
     this.lineWidth = 1;
-    this.lineColor = color | '#000';
+    this.lineColor = color || '#000';
+  }
+
+  get boundaryBox() {
+    return createBoundaryBox(this);
   }
 
   createPath() {
@@ -59,7 +72,7 @@ export default class Line {
   }
 
   renderPoint(g, from, to) {
-    return this.lineTo(g, from, to);
+    return this.line(g, from, to);
   }
 
   line(g, from, to) {

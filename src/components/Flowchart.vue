@@ -55,11 +55,11 @@ export default {
   },
   data() {
     return {
-      connectingInfo: {
-        source: null,
-        sourcePosition: null,
+      connectStart: {
+        node: null,
+        position: null,
       },
-      selectionInfo: null,
+      selectionStartPoint: null,
       currentNodes: [],
       currentConnections: [],
       /**
@@ -77,33 +77,62 @@ export default {
   methods: {
 
     add(node) {
-      if (this.readonly) {
-        return;
-      }
+      if (this.readonly) { return; }
       this.nodes.push(node);
-      this.$emit("add", node, this.nodes, this.connections);
+      this.$emit("addNode", node, this.nodes, this.connections);
+    },
+
+    connect(connection) {
+      if (this.readonly) { return; }
+      this.connections.push(connection);
+      this.$emit("connected", connection, this.nodes, this.connections);
+    },
+
+    remove() {
+      if (this.readonly) { return; }
+      for (const conn of this.currentConnections) {
+        this.removeConnection(conn);
+      }
+      this.currentConnections.splice(0, this.currentConnections.length);
+      for (const node of this.currentNodes) {
+        this.removeNode(node);
+      }
+      this.currentNodes.splice(0, this.currentNodes.length);
+    },
+
+    removeNode(node) {
+      const connections = this.connections.filter(conn => conn.from.node.id === node.id || conn.to.node.id === node.id);
+      for (const connection of connections) {
+        this.connections.splice(this.connections.indexOf(connection), 1);
+      }
+      this.nodes.splice(this.nodes.indexOf(node), 1);
+      this.$emit("removeNode", node, this.nodes, this.connections);
+    },
+
+    removeConnection(conn) {
+      this.connections.splice(this.connections.indexOf(conn), 1);
+      this.$emit("removeConnection", conn, this.nodes, this.connections);
     },
 
     editCurrent() {
       if (this.currentNodes.length === 1) {
         this.editNode(this.currentNodes[0]);
-      } else if (this.currentConnections.length === 1) {
+        return;
+      } 
+      if (this.currentConnections.length === 1) {
         this.editConnection(this.currentConnections[0]);
+        return;
       }
     },
 
     editNode(node) {
-      if (this.readonly) {
-        return;
-      }
-      this.$emit("editnode", node);
+      if (this.readonly) { return; }
+      this.$emit("editNode", node);
     },
 
     editConnection(connection) {
-      if (this.readonly) {
-        return;
-      }
-      this.$emit("editconnection", connection);
+      if (this.readonly) { return; }
+      this.$emit("editConnection", connection);
     },
 
     handleChartMouseWheel(event) {
@@ -126,53 +155,46 @@ export default {
       handlers.chartMouseDown(this, event);
     },
 
-    renderSelection() {
-      if (this.selectionInfo) {
-        this.currentNodes.splice(0, this.currentNodes.length);
-        this.currentConnections.splice(0, this.currentConnections.length);
-        let edge = getEdgeOfPoints([
-          { x: this.selectionInfo.x, y: this.selectionInfo.y },
-          { x: this.cursorToChartOffset.x, y: this.cursorToChartOffset.y },
-        ]);
-        let svg = d3.select("#svg");
-        let rect = svg.select(".selection").classed("active", true);
-        rect
-          .attr("x", edge.start.x)
-          .attr("y", edge.start.y)
-          .attr("width", edge.end.x - edge.start.x)
-          .attr("height", edge.end.y - edge.start.y);
-
-        this.nodes.forEach(item => {
-          const points = [
-            { x: item.x, y: item.y },
-            { x: item.x, y: item.y + item.height },
-            { x: item.x + item.width, y: item.y },
-            { x: item.x + item.width, y: item.y + item.height },
-          ];
-          if (points.every(point => pointRectangleIntersection(point, edge))) {
-            this.currentNodes.push(item);
-          }
-        });
-        this.lines.forEach(line => {
-          const points = [
-            { x: line.sourceX, y: line.sourceY },
-            { x: line.destinationX, y: line.destinationY },
-          ];
-          if (
-            points.every(point => pointRectangleIntersection(point, edge)) &&
-            this.currentConnections.every(item => item.id !== line.id)
-          ) {
-            const connection = this.connections.find(conn => conn.id === line.id);
-            this.currentConnections.push(connection);
-          }
-        });
-      } else {
+    async renderSelection() {
+      if (!this.selectionStartPoint) {
+        // If not selecting anything currently remove selection rectangle
         d3.selectAll("#svg > .selection").classed("active", false);
+        return;
       }
-    },
 
-    getNodeById(id) {
-      return this.nodes.find(node => node.id === id)
+      // Clear current selection
+      this.currentNodes = [];
+      this.currentConnections = [];
+
+      // Get selection boundary box
+      const edge = getEdgeOfPoints([
+        { x: this.selectionStartPoint.x, y: this.selectionStartPoint.y },
+        { x: this.cursorToChartOffset.x, y: this.cursorToChartOffset.y },
+      ]);
+
+      // Create selection rectangle
+      const svg = d3.select("#svg");
+      const rect = svg.select(".selection").classed("active", true);
+      rect
+        .attr("x", edge.start.x)
+        .attr("y", edge.start.y)
+        .attr("width", edge.end.x - edge.start.x)
+        .attr("height", edge.end.y - edge.start.y);
+
+      // Add all nodes completely within the selection to currentNodes
+      for (const node of this.nodes) {
+        if (node.boundaryBox.every(point => pointRectangleIntersection(point, edge))) {
+          this.currentNodes.push(node);
+        }
+      }
+
+      // Add all connections completely within the selection to currentConnections
+      for (const line of this.lines) {
+        if (line.boundaryBox.every(point => pointRectangleIntersection(point, edge))) {
+          const connection = this.connections.find(conn => conn.id === line.id);
+          this.currentConnections.push(connection);
+        }
+      }
     },
 
     async renderConnections() {
@@ -180,63 +202,90 @@ export default {
       d3.selectAll("#svg > g.connection").remove();
 
       this.lines = [];
-      this.connections.forEach(conn => {
+      for (const connection of this.connections) {
         const g = this.append("g");
-        const fromNode = this.getNodeById(conn.source.id);
+
+        const fromNode = this.getNodeById(connection.from.id);
         const from = {
-          ...fromNode.connectorPosition(conn.source.position),
-          position: conn.source.position,
+          ...fromNode.connectorPosition(connection.from.position),
+          position: connection.from.position,
           node: fromNode,
         };
-        const toNode = this.getNodeById(conn.destination.id);
+        const toNode = this.getNodeById(connection.to.id);
         const to = {
-          ...toNode.connectorPosition(conn.destination.position),
-          position: conn.destination.position,
+          ...toNode.connectorPosition(connection.to.position),
+          position: connection.to.position,
           node: toNode,
         };
 
-        const isSelected = !!this.currentConnections.find(item => item === conn);
+        const isSelected = !!this.currentConnections.find(item => item === connection);
 
-        const { paths, lines } = conn.render(g, from, to, isSelected)
+        const { paths, lines } = connection.render(g, from, to, isSelected);
 
         for (const path of paths) {
           path.on("mousedown", () => {
-            handlers.pathMouseDown(this, conn);
+            handlers.pathMouseDown(this, connection);
           });
         }
-        for (const line of lines) {
-          this.lines.push({
-            id: conn.id,
-            from: line.from,
-            to: line.to,
-          });
+        for (const { from, to } of lines) {
+          const boundaryBox = [
+            { x: from.x, y: from.y },
+            { x: to.x, y: to.y },
+          ];
+          this.lines.push({ id: connection.id, from, to, boundaryBox });
         }
-      });
+      }
     },
 
     async renderNodes() {
-      // clear currently rendered nodes
+      // Clear currently rendered nodes
       d3.selectAll("#svg > g.node").remove();
 
-      this.nodes.forEach(node => {
-        this.renderNode(node, this.currentNodes.find(item => item === node))
-      })
+      for (const node of this.nodes) {
+        const isSelected = !!this.currentNodes.find(item => item === node);
+        this.renderNode(node, isSelected);
+      }
     },
 
-    getNodeConnectorOffset(nodeId, connectorPosition) {
-      const node = this.nodes.find(node => node.id === nodeId);
-      return this.getConnectorPosition(node)[connectorPosition];
+    renderNode(node, isSelected) {
+      const g = this.append("g")
+        .attr("cursor", "move")
+        .classed("node", true);
+
+      node.render(g, isSelected);
+
+      const drag = d3.drag()
+        .on("start", async () => { handlers.nodeDragStart(this, node) })
+        .on("drag", async () => { handlers.nodeDragMove(this, node) })
+        .on("end", async () => { handlers.nodeDragEnd(this, node) });
+      g.call(drag);
+      g.on("mousedown", () => {
+        // handle ctrl+mousedown
+        if (!d3.event.ctrlKey) { return; }
+        // Add to currentNodes if not selected and remove if selected
+        if (!this.currentNodes.find(item => item === node)) {
+          this.currentNodes.push(node);
+        } else {
+          this.currentNodes.splice(this.currentNodes.indexOf(node), 1);
+        }
+      });
+
+      node.renderConnectors(g, this);
+    },
+
+    getNodeById(id) {
+      return this.nodes.find(node => node.id === id);
     },
 
     append(element) {
-      let svg = d3.select("#svg");
+      const svg = d3.select("#svg");
       return svg.insert(element, ".selection");
     },
 
-    guideLineTo(x1, y1, x2, y2) {
-      let g = this.append("g");
+    guideLine(from, to) {
+      const g = this.append("g");
       g.classed("guideline", true);
-      lineTo(g, { x: x1, y: y1 }, { x: x2, y: y2 }, 1, "#a3a3a3", [5, 3]);
+      lineTo(g, from, to, 1, "#a3a3a3", [5, 3]);
     },
 
     getConnectorPositions(node) {
@@ -249,102 +298,8 @@ export default {
       return { left, right, top, bottom };
     },
 
-    renderNode(node, isSelected) {
-      let g = this.append("g").attr("cursor", "move").classed("node", true);
-
-      if (node.render) {
-        node.render(g, isSelected);
-      }
-
-      const drag = d3.drag()
-        .on("start", () => { handlers.dragStart(this, node) })
-        .on("drag", async () => { handlers.dragMove(this, node) })
-        .on("end", () => { handlers.dragEnd(this, node) });
-      g.call(drag);
-      g.on("mousedown", () => {
-        // handle ctrl+mousedown
-        if (!d3.event.ctrlKey) {
-          return;
-        }
-        let isNotCurrentNode = !this.currentNodes.find(item => item === node);
-        if (isNotCurrentNode) {
-          this.currentNodes.push(node);
-        } else {
-          this.currentNodes.splice(this.currentNodes.indexOf(node), 1);
-        }
-      });
-
-      const connectors = [];
-      const connectorPosition = this.getConnectorPositions(node);
-      for (const position in connectorPosition) {
-        const positionElement = connectorPosition[position];
-        const connector = g
-          .append("circle")
-          .attr("cx", positionElement.x)
-          .attr("cy", positionElement.y)
-          .attr("r", 4)
-          .attr("class", "connector");
-        connector
-          .on("mousedown", () => {
-            d3.event.stopPropagation();
-            if (node.type === "end" || this.readonly) {
-              return;
-            }
-            this.connectingInfo.source = node;
-            this.connectingInfo.sourcePosition = position;
-          })
-          .on("mouseup", () => {
-            d3.event.stopPropagation();
-            if (this.connectingInfo.source) {
-              if (this.connectingInfo.source.id !== node.id) {
-                // Node can't connect to itself
-                let tempId = +new Date();
-                let conn = {
-                  source: {
-                    id: this.connectingInfo.source.id,
-                    position: this.connectingInfo.sourcePosition,
-                  },
-                  destination: {
-                    id: node.id,
-                    position: position,
-                  },
-                  id: tempId,
-                  type: "pass",
-                  name: "Pass",
-                };
-                this.connections.push(conn);
-                this.$emit("connect", conn, this.nodes, this.connections);
-              }
-              this.connectingInfo.source = null;
-              this.connectingInfo.sourcePosition = null;
-            }
-          })
-          .on("mouseover", () => {
-            connector.classed("active", true);
-          })
-          .on("mouseout", () => {
-            connector.classed("active", false);
-          });
-        connectors.push(connector);
-      }
-      g.on("mouseover", () => {
-        connectors.forEach((conn) => conn.classed("active", true));
-      }).on("mouseout", () => {
-        connectors.forEach((conn) => conn.classed("active", false));
-      });
-    },
-
     getCurrentNodesEdge() {
-      let points = this.currentNodes.map((node) => ({
-        x: node.x,
-        y: node.y,
-      }));
-      points.push(
-        ...this.currentNodes.map((node) => ({
-          x: node.x + node.width,
-          y: node.y + node.height,
-        }))
-      );
+      const points = this.currentNodes.map(node => node.boundaryBox);
       return getEdgeOfPoints(points);
     },
 
@@ -355,46 +310,9 @@ export default {
       this.$emit("save", this.nodes, this.connections);
     },
 
-    async remove() {
-      if (this.readonly) {
-        return;
-      }
-      if (this.currentConnections.length > 0) {
-        for (let conn of this.currentConnections) {
-          this.removeConnection(conn);
-        }
-        this.currentConnections.splice(0, this.currentConnections.length);
-      }
-      if (this.currentNodes.length > 0) {
-        for (let node of this.currentNodes) {
-          this.removeNode(node);
-        }
-        this.currentNodes.splice(0, this.currentNodes.length);
-      }
-    },
-
-    removeNode(node) {
-      const connections = this.connections.filter(
-        (item) => item.source.id === node.id || item.destination.id === node.id
-      );
-      for (const connection of connections) {
-        this.connections.splice(
-          this.connections.indexOf(connection),
-          1
-        );
-      }
-      this.nodes.splice(this.nodes.indexOf(node), 1);
-      this.$emit("delete", node, this.nodes, this.connections);
-    },
-
-    removeConnection(conn) {
-      const index = this.connections.indexOf(conn);
-      this.connections.splice(index, 1);
-      this.$emit("disconnect", conn, this.nodes, this.connections);
-    },
-
     moveCurrentNode(x, y) {
-      if (this.currentNodes.length > 0 && !this.readonly) {
+      if (!this.readonly) { return; }
+      if (this.currentNodes.length > 0) {
         for (const node of this.currentNodes) {
           if (node.x + x < 0) {
             x = -node.x;
@@ -446,19 +364,13 @@ export default {
       }
     };
   },
-  created() {},
   computed: {
     hoveredConnector() {
       for (const node of this.nodes) {
-        let connectorPosition = this.getConnectorPositions(node);
-        for (let prop in connectorPosition) {
-          let entry = connectorPosition[prop];
-          if (
-            Math.hypot(
-              entry.x - this.cursorToChartOffset.x,
-              entry.y - this.cursorToChartOffset.y
-            ) < 10
-          ) {
+        const connectorPosition = this.getConnectorPositions(node);
+        for (const prop in connectorPosition) {
+          const entry = connectorPosition[prop];
+          if (Math.hypot(entry.x - this.cursorToChartOffset.x, entry.y - this.cursorToChartOffset.y) < 20) {
             return { position: prop, node: node };
           }
         }
@@ -494,7 +406,7 @@ export default {
       return null;
     },
     cursor() {
-      if (this.connectingInfo.source || this.hoveredConnector) {
+      if (this.connectStart.node || this.hoveredConnector) {
         return "crosshair";
       }
       if (this.hoveredConnection != null) {
@@ -504,11 +416,18 @@ export default {
     },
   },
   watch: {
-    selectionInfo: {
+    selectionStartPoint: {
       immediate: true,
       deep: true,
       handler() {
         this.renderSelection();
+      },
+    },
+    connectStart: {
+      immediate: true,
+      deep: true,
+      handler() {
+        this.renderConnections();
       },
     },
     currentNodes: {
@@ -523,23 +442,7 @@ export default {
       immediate: true,
       deep: true,
       handler() {
-        this.$emit('selectconnection', this.currentConnections);
-        this.renderConnections();
-      },
-    },
-    cursorToChartOffset: {
-      immediate: true,
-      deep: true,
-      handler() {
-        if (this.selectionInfo) {
-          this.renderSelection();
-        }
-      },
-    },
-    connectingInfo: {
-      immediate: true,
-      deep: true,
-      handler() {
+        this.$emit('selectConnection', this.currentConnections);
         this.renderConnections();
       },
     },
@@ -556,6 +459,15 @@ export default {
       deep: true,
       handler() {
         this.renderConnections();
+      },
+    },
+    cursorToChartOffset: {
+      immediate: true,
+      deep: true,
+      handler() {
+        if (this.selectionStartPoint) {
+          this.renderSelection();
+        }
       },
     },
   },

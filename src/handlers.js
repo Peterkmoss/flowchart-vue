@@ -1,33 +1,31 @@
 import * as d3 from "d3";
+import { PassConnection, TmpConnection } from './utils/Connection';
 
-export const dragStart = (_this, node) => {
-  // handle mousedown
-  let isNotCurrentNode = !_this.currentNodes.find(item => item === node);
-  if (isNotCurrentNode) {
-    _this.currentConnections.splice(0, _this.currentConnections.length);
-    _this.currentNodes.splice(0, _this.currentNodes.length);
-    _this.currentNodes.push(node);
+export const nodeDragStart = (_this, node) => {
+  const isSelected = _this.currentNodes.find(item => item === node);
+  if (!isSelected) {
+    _this.currentNodes = [node];
   }
 
   if (_this.clickedOnce) {
-    _this.currentNodes.splice(0, _this.currentNodes.length);
+    _this.currentNodes = [];
     _this.editNode(node);
-  } else {
-    let timer = setTimeout(function () {
-      _this.clickedOnce = false;
-      clearTimeout(timer);
-    }, 300);
-    _this.clickedOnce = true;
-  }
-}
-
-export const dragMove = (_this) => {
-  if (_this.readonly) {
     return;
   }
 
-  let zoom = parseFloat(document.getElementById("svg").style.zoom || 1);
-  for (let currentNode of _this.currentNodes) {
+  // Double click support. Reset clickedOnce after 300ms
+  const timer = setTimeout(() => {
+    _this.clickedOnce = false;
+    clearTimeout(timer);
+  }, 300);
+  _this.clickedOnce = true;
+}
+
+export const nodeDragMove = (_this) => {
+  if (_this.readonly) { return; }
+
+  const zoom = parseFloat(document.getElementById("svg").style.zoom || 1);
+  for (const currentNode of _this.currentNodes) {
     let x = d3.event.dx / zoom;
     if (currentNode.x + x < 0) {
       x = -currentNode.x;
@@ -40,68 +38,59 @@ export const dragMove = (_this) => {
     currentNode.y += y;
   }
 
+  // Clear guide lines
   d3.selectAll("#svg > g.guideline").remove();
-  let edge = _this.getCurrentNodesEdge();
-  let expectX = Math.round(Math.round(edge.start.x) / 10) * 10;
-  let expectY = Math.round(Math.round(edge.start.y) / 10) * 10;
-  _this.nodes.forEach(item => {
-    if (
-      _this.currentNodes.filter(currentNode => currentNode === item)
-      .length === 0
-    ) {
-      if (item.x === expectX) {
-        // vertical guideline
-        if (item.y < expectY) {
-          _this.guideLineTo(
-            item.x,
-            item.y + item.height,
-            expectX,
-            expectY
-          );
-        } else {
-          _this.guideLineTo(
-            expectX,
-            expectY + item.height,
-            item.x,
-            item.y
-          );
-        }
-      }
-      if (item.y === expectY) {
-        // horizontal guideline
-        if (item.x < expectX) {
-          _this.guideLineTo(
-            item.x + item.width,
-            item.y,
-            expectX,
-            expectY
-          );
-        } else {
-          _this.guideLineTo(
-            expectX + item.width,
-            expectY,
-            item.x,
-            item.y
-          );
-        }
+
+  const edge = _this.getCurrentNodesEdge();
+  const expectX = Math.round(Math.round(edge.start.x) / 10) * 10;
+  const expectY = Math.round(Math.round(edge.start.y) / 10) * 10;
+
+  const guideNodes = _this.nodes.filter(node => _this.currentNodes.find(currentNode => currentNode !== node))
+  for (const node of guideNodes) {
+    if (node.x === expectX) {
+      // vertical guideline
+      if (node.y < expectY) {
+        _this.guideLine(
+          { x: node.x, y: node.y + node.height },
+          { x: expectX, y: expectY },
+        );
+      } else {
+        _this.guideLine(
+          { x: expectX, y: expectY + node.height },
+          { x: node.x, y: node.y },
+        );
       }
     }
-  });
+    if (node.y === expectY) {
+      // horizontal guideline
+      if (node.x < expectX) {
+        _this.guideLine(
+          { x: node.x + node.width, y: node.y },
+          { x: expectX, y: expectY },
+        );
+      } else {
+        _this.guideLine(
+          { x: expectX + node.width, y: expectY },
+          { x: node.x, y: node.y },
+        );
+      }
+    }
+  }
 }
 
-export const dragEnd = (_this) => {
+export const nodeDragEnd = (_this) => {
   d3.selectAll("#svg > g.guideline").remove();
-  for (let currentNode of _this.currentNodes) {
+
+  for (const currentNode of _this.currentNodes) {
     currentNode.x = Math.round(Math.round(currentNode.x) / 10) * 10;
     currentNode.y = Math.round(Math.round(currentNode.y) / 10) * 10;
   }
 }
 
 export const chartMouseDown = async (_this, event) => {
-  if (event.ctrlKey) {
-    return;
-  }
-  _this.selectionInfo = { x: event.offsetX, y: event.offsetY };
+  if (event.ctrlKey) { return; }
+  // Set starting point of selection to where the user clicked
+  _this.selectionStartPoint = { x: event.offsetX, y: event.offsetY };
 }
 
 export const chartDblClick = async (_this, event) => {
@@ -113,78 +102,72 @@ export const chartDblClick = async (_this, event) => {
 
 export const chartMouseMove = async (_this, event) => {
   // calc offset of cursor to chart
-  let boundingClientRect = event.currentTarget.getBoundingClientRect();
-  let actualX = event.pageX - boundingClientRect.left - window.scrollX;
+  const boundingClientRect = event.currentTarget.getBoundingClientRect();
+  const actualX = event.pageX - boundingClientRect.left - window.scrollX;
   _this.cursorToChartOffset.x = Math.trunc(actualX);
-  let actualY = event.pageY - boundingClientRect.top - window.scrollY;
+  const actualY = event.pageY - boundingClientRect.top - window.scrollY;
   _this.cursorToChartOffset.y = Math.trunc(actualY);
 
-  if (_this.connectingInfo.source) {
+  if (_this.connectStart.node) {
     await _this.renderConnections();
 
     d3.selectAll("#svg .connector").classed("active", true);
 
-    let sourceOffset = _this.getNodeConnectorOffset(
-      _this.connectingInfo.source.id,
-      _this.connectingInfo.sourcePosition
-    );
-    let destinationPosition = _this.hoveredConnector
-      ? _this.hoveredConnector.position
-      : null;
-    _this.arrowTo(
-      sourceOffset.x,
-      sourceOffset.y,
-      _this.cursorToChartOffset.x,
-      _this.cursorToChartOffset.y,
-      _this.connectingInfo.sourcePosition,
-      destinationPosition
-    );
+    const fromNode = _this.getNodeById(_this.connectStart.node.id);
+    const from = {
+      ...fromNode.connectorPosition(_this.connectStart.position),
+      position: _this.connectStart.position,
+      node: fromNode,
+    };
+
+    if (_this.hoveredConnector) {
+      const toNode = _this.getNodeById(_this.hoveredConnector.node.id);
+      const to = {
+        ...toNode.connectorPosition(_this.hoveredConnector.position),
+        position: _this.hoveredConnector.position,
+        node: toNode,
+      };
+
+      const line = new PassConnection('tmp', from, to);
+      const g = _this.append("g");
+      line.render(g, from, to, false);
+    } else {
+      const to = {
+        x: _this.cursorToChartOffset.x,
+        y: _this.cursorToChartOffset.y,
+      };
+
+      const line = new TmpConnection('tmp', from, to);
+
+      const g = _this.append("g");
+      line.render(g, from, to, false);
+    }
   }
 }
 
 export const chartMouseUp = async (_this) => {
-  if (_this.connectingInfo.source) {
-    if (_this.hoveredConnector) {
-      if (_this.connectingInfo.source.id !== _this.hoveredConnector.node.id) {
-        // Node can't connect to itself
-        let tempId = +new Date();
-        let conn = {
-          source: {
-            id: _this.connectingInfo.source.id,
-            position: _this.connectingInfo.sourcePosition,
-          },
-          destination: {
-            id: _this.hoveredConnector.node.id,
-            position: _this.hoveredConnector.position,
-          },
-          id: tempId,
-          type: "pass",
-          name: "Pass",
-        };
-        _this.connections.push(conn);
-        _this.$emit("connect", conn, _this.nodes, _this.connections);
-      }
-    }
-    _this.connectingInfo.source = null;
-    _this.connectingInfo.sourcePosition = null;
+  d3.selectAll("#svg .connector").classed("active", false);
+  if (_this.connectStart) {
+    _this.connectStart.node = null;
+    _this.connectStart.position = null;
   }
-  if (_this.selectionInfo) {
-    _this.selectionInfo = null;
+  if (_this.selectionStartPoint) {
+    _this.selectionStartPoint = null;
   }
 }
 
 export const chartMouseWheel = async (_this, event) => {
+  if (!event.ctrlKey) { return; }
+
   event.stopPropagation();
   event.preventDefault();
-  if (event.ctrlKey) {
-    let svg = document.getElementById("svg");
-    let zoom = parseFloat(svg.style.zoom || 1);
-    if (event.deltaY > 0 && zoom === 0.1) {
-      return;
-    }
-    zoom -= event.deltaY / 100 / 10;
-    svg.style.zoom = zoom;
+  const svg = document.getElementById("svg");
+  let zoom = parseFloat(svg.style.zoom || 1);
+  if (event.deltaY > 0 && zoom === 0.1) {
+    return;
   }
+  zoom -= event.deltaY / 100 / 10;
+  svg.style.zoom = zoom;
 }
 
 export const pathMouseDown = async (_this, conn) => {
@@ -198,7 +181,6 @@ export const pathMouseDown = async (_this, conn) => {
     }, 300);
     _this.pathClickedOnce = true;
   }
-  _this.currentNodes.splice(0, _this.currentNodes.length);
-  _this.currentConnections.splice(0, _this.currentConnections.length);
-  _this.currentConnections.push(conn);
+  _this.currentNodes = [];
+  _this.currentConnections = [ conn ];
 }

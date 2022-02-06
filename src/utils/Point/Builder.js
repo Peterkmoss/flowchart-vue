@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import Point, { BottomPoint, LeftPoint, RightPoint, TopPoint } from '.';
+import Point, { BottomPoint, LeftPoint, RightPoint, TopPoint, TmpPoint } from '.';
 import { Node } from '../Node';
 
 export class Builder {
@@ -11,6 +11,8 @@ export class Builder {
   #node;
   /** @type { Point } */
   #point;
+  /** @type { boolean } */
+  #tmp;
 
   /**
     * @param { number } x
@@ -21,6 +23,7 @@ export class Builder {
     this.#y = y;
     this.#node = node;
     this.#point = null;
+    this.#tmp = false;
     return this;
   }
 
@@ -53,12 +56,13 @@ export class Builder {
       case 'right': return this.right();
       case 'bottom': return this.bottom();
       case 'top': return this.top();
-      default: throw new Error('position not supported');
+      default: 
+        throw new Error(`position not supported: ${position}`);
     }
   }
 
   _checkNode() {
-    if (!this.#node) {
+    if (!this.#node && !this.#tmp) {
       throw new Error('you need to provide a node');
     }
   }
@@ -84,6 +88,13 @@ export class Builder {
   top() { 
     this._checkNode();
     this.#point = new TopPoint(this.#x, this.#y, this.#node);
+    return this;
+  }
+
+  tmp() { 
+    this.#tmp = true;
+    this._checkNode();
+    this.#point = new TmpPoint(this.#x, this.#y, this.#node);
     return this;
   }
 }

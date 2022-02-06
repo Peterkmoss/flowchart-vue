@@ -3,13 +3,18 @@ import { Node } from "../Node";
 
 export default class AbstractConnection {
   id;
-  source;
-  destination;
+  from;
+  to;
 
-  constructor(id, source, destination) {
+  /**
+    * @param { any } id
+    * @param { { id: any, position: string } } from
+    * @param { { id: any, position: string } } to
+    */
+  constructor(id, from, to) {
     this.id = id;
-    this.source = source;
-    this.destination = destination;
+    this.from = from;
+    this.to = to;
   }
 
   getColor() {

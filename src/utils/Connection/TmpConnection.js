@@ -1,9 +1,9 @@
-import { ArrowLine } from '../Line';
+import { Line } from '../Line';
 import { Builder } from '../Point';
 
 import AbstractConnection from './AbstractConnection';
 
-export default class ArrowConnection extends AbstractConnection {
+export default class TmpConnection extends AbstractConnection {
   constructor(id, from, to) {
     super(id, from, to);
   }
@@ -19,12 +19,11 @@ export default class ArrowConnection extends AbstractConnection {
       .fromPosition(from.position)
       .build();
 
-    const toPoint = new Builder(to.x, to.y, to.node)
-      .fromPosition(to.position)
+    const toPoint = new Builder(to.x, to.y, null)
+      .tmp()
       .build();
     
-    const color = this.getColor(isSelected);
-    const line = new ArrowLine(fromPoint, toPoint, color);
+    const line = new Line(fromPoint, toPoint);
 
     const lines = line.createPath();
     const paths = line.renderPath(g);
