@@ -5,10 +5,10 @@
       Flowchart & Flowchart designer component for Vue.js.
     </h5>
     <div id="toolbar">
-      <button @click="addStart">Add Start</button>
-      <button @click="addEnd">Add End</button>
-      <button @click="addOperation">Add Operation</button>
-      <button @click="addDecision">Add Decision</button>
+      <button @click="addRounded">Add Rounded</button>
+      <button @click="addRectangle">Add Rectangle</button>
+      <button @click="addDiamond">Add Diamond</button>
+      <button @click="addCircle">Add Circle</button>
       <button @click="$refs.chart.remove()">Delete(Del)</button>
       <button @click="$refs.chart.editCurrent()"> Edit(Double-click node)</button>
       <button @click="$refs.chart.save()">Save</button>
@@ -40,7 +40,7 @@
 import ConnectionDialog from "../components/ConnectionDialog";
 import NodeDialog from "../components/NodeDialog";
 import Flowchart from "../components/Flowchart";
-import { StartNode, EndNode, OperationNode, DecisionNode } from "../utils/Node";
+import { RoundedNode, RectangleNode, DiamondNode, CircleNode } from "../utils/Node";
 import { PassConnection, ArrowConnection, RejectConnection } from "../utils/Connection";
 
 export default {
@@ -52,16 +52,31 @@ export default {
   data: function () {
     return {
       nodes: [
-        new StartNode(1, 100, 220),
-        new OperationNode(2, 250, 220, "Op"),
-        new DecisionNode(3, 400, 220, "De"),
-        new EndNode(4, 550, 220),
+        new RoundedNode(1, 100, 220, "Start"),
+        new RectangleNode(2, 250, 100),
+        new DiamondNode(3, 400, 400, "Something"),
+        new CircleNode(4, 550, 220, "End"),
       ],
       connections: [
         new RejectConnection(
           1, 
-          { id: 1, position: "bottom" }, 
+          { id: 1, position: "top" }, 
           { id: 2, position: "top" },
+        ),
+        new PassConnection(
+          2, 
+          { id: 2, position: "right" }, 
+          { id: 3, position: "top" },
+        ),
+        new PassConnection(
+          3, 
+          { id: 1, position: "right" }, 
+          { id: 3, position: "left" },
+        ),
+        new ArrowConnection(
+          4, 
+          { id: 3, position: "right" }, 
+          { id: 4, position: "bottom" },
         ),
       ],
       nodeForm: { target: null },
@@ -72,17 +87,17 @@ export default {
   },
   async mounted() {},
   methods: {
-    addEnd() {
-      this.add(100, 100, EndNode);
+    addRounded() {
+      this.add(100, 100, RoundedNode);
     },
-    addStart() {
-      this.add(100, 100, StartNode);
+    addRectangle() {
+      this.add(100, 100, RectangleNode);
     },
-    addDecision() {
-      this.add(100, 100, DecisionNode);
+    addCircle() {
+      this.add(100, 100, CircleNode);
     },
-    addOperation() {
-      this.add(100, 100, OperationNode);
+    addDiamond() {
+      this.add(100, 100, DiamondNode);
     },
     add(x, y, cls) {
       this.$refs.chart.add(new cls(+new Date(), x, y, "New"))
