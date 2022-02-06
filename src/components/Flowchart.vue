@@ -202,38 +202,45 @@ export default {
       d3.selectAll("#svg > g.connection").remove();
 
       this.lines = [];
+
+      const promises = []
       for (const connection of this.connections) {
-        const g = this.append("g");
+        promises.push(this.renderConnection(connection));
+      }
+      await Promise.all(promises);
+    },
 
-        const fromNode = this.getNodeById(connection.from.id);
-        const from = {
-          ...fromNode.connectorPosition(connection.from.position),
-          position: connection.from.position,
-          node: fromNode,
-        };
-        const toNode = this.getNodeById(connection.to.id);
-        const to = {
-          ...toNode.connectorPosition(connection.to.position),
-          position: connection.to.position,
-          node: toNode,
-        };
+    async renderConnection(connection) {
+      const g = this.append("g");
 
-        const isSelected = !!this.currentConnections.find(item => item === connection);
+      const fromNode = this.getNodeById(connection.from.id);
+      const from = {
+        ...fromNode.connectorPosition(connection.from.position),
+        position: connection.from.position,
+        node: fromNode,
+      };
+      const toNode = this.getNodeById(connection.to.id);
+      const to = {
+        ...toNode.connectorPosition(connection.to.position),
+        position: connection.to.position,
+        node: toNode,
+      };
 
-        const { paths, lines } = connection.render(g, from, to, isSelected);
+      const isSelected = !!this.currentConnections.find(item => item === connection);
 
-        for (const path of paths) {
-          path.on("mousedown", () => {
+      const { paths, lines } = connection.render(g, from, to, isSelected);
+
+      for (const path of paths) {
+        path.on("mousedown", () => {
             handlers.pathMouseDown(this, connection);
-          });
-        }
-        for (const { from, to } of lines) {
-          const boundaryBox = [
-            { x: from.x, y: from.y },
-            { x: to.x, y: to.y },
-          ];
-          this.lines.push({ id: connection.id, from, to, boundaryBox });
-        }
+            });
+      }
+      for (const { from, to } of lines) {
+        const boundaryBox = [
+        { x: from.x, y: from.y },
+        { x: to.x, y: to.y },
+        ];
+        this.lines.push({ id: connection.id, from, to, boundaryBox });
       }
     },
 
@@ -241,13 +248,15 @@ export default {
       // Clear currently rendered nodes
       d3.selectAll("#svg > g.node").remove();
 
+      const promises = [];
       for (const node of this.nodes) {
         const isSelected = !!this.currentNodes.find(item => item === node);
-        this.renderNode(node, isSelected);
+        promises.push(this.renderNode(node, isSelected));
       }
+      await Promise.all(promises);
     },
 
-    renderNode(node, isSelected) {
+    async renderNode(node, isSelected) {
       const g = this.append("g")
         .attr("cursor", "move")
         .classed("node", true);
@@ -285,7 +294,7 @@ export default {
     guideLine(from, to) {
       const g = this.append("g");
       g.classed("guideline", true);
-      lineTo(g, from, to, 1, "#a3a3a3", [5, 3]);
+      lineTo(g, from, to, 1, "#a3a3a3", [5]);
     },
 
     getConnectorPositions(node) {
