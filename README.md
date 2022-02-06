@@ -28,29 +28,17 @@ npm i @peterkmoss/flowchart-vue
         @save="handleChartSave" 
         ref="chart"
       />
-      <node-dialog
-        :visible.sync="nodeDialogVisible"
-        :node.sync="nodeForm.target"
-      />
-      <connection-dialog
-        :visible.sync="connectionDialogVisible"
-        :connection.sync="connectionForm.target"
-        :operation="connectionForm.operation"
-      />
     </div>
 </template>
 <script>
   import Flowchart, {
     Nodes, Connections,
-    ConnectionDialog, NodeDialog,
   } from '@peterkmoss/flowchart-vue';
 
   export default {
     name: 'App',
     components: {
       Flowchart,
-      ConnectionDialog,
-      NodeDialog,
     },
     data() {
       return {
@@ -67,10 +55,6 @@ npm i @peterkmoss/flowchart-vue
             { id: 2, position: "left" }
           )
         ],
-        nodeForm: { target: null },
-        connectionForm: { target: null, operation: null },
-        nodeDialogVisible: false,
-        connectionDialogVisible: false,
       };
     },
     methods: {
@@ -93,12 +77,10 @@ npm i @peterkmoss/flowchart-vue
         // E.g. save to database
       },
       handleEditNode(node) {
-        this.nodeForm.target = node;
-        this.nodeDialogVisible = true;
+        // E.g. open a dialog to change properties on the node
       },
       handleEditConnection(connection) {
-        this.connectionForm.target = connection;
-        this.connectionDialogVisible = true;
+        // E.g. open a dialog to change properties on the connection
       },
     }
   };
