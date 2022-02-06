@@ -1,3 +1,5 @@
 src
 babel.config.js
 public
+dist
+dist/FlowChart.umd.min.js
